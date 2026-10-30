@@ -117,61 +117,21 @@ export function membersByArchetype(members: readonly Member[]): Record<Archetype
   return out;
 }
 
-// ── 7.2 팀 업무 단계 ───────────────────────────────────
+// ── 다섯 방식의 균형 ───────────────────────────────────
 
-export type StageId = 'try' | 'build' | 'grow' | 'keep' | 'close';
+/** 오각형 꼭짓점 순서: 일의 흐름(시도 → 구축 → 개선·확장 → 유지 → 정리·종료) */
+export const CYCLE: readonly Archetype[] = ['P', 'B', 'G', 'M', 'S'];
 
-/** 설계서 7.2: 업무 단계와 연결되는 원형 */
-export const STAGES: readonly { id: StageId; label: string; archetype: Archetype }[] = [
-  { id: 'try', label: '시도', archetype: 'P' },
-  { id: 'build', label: '구축', archetype: 'B' },
-  { id: 'grow', label: '개선·확장', archetype: 'G' },
-  { id: 'keep', label: '유지', archetype: 'M' },
-  { id: 'close', label: '정리·종료', archetype: 'S' },
-];
-
-export const MAX_TASKS = 7;
-
-export interface TeamTask {
-  name: string;
-  stage: StageId | null;
-  /** 담당 팀원 순번(정하지 않았으면 null) */
-  owner: number | null;
-  /** 필요한 지원(진행자가 대화하며 채움, 계산하지 않음) */
-  note: string;
+/** 원형별로 그 방식을 주 또는 보조 유형으로 가진 팀원 수 */
+export function totals(core: Record<Archetype, number>, second: Record<Archetype, number>): Record<Archetype, number> {
+  return Object.fromEntries(ARCHETYPES.map((a) => [a, core[a] + second[a]])) as Record<Archetype, number>;
 }
 
-/** 업무 단계의 방식이 담당자에게 어떤 자리인지 */
-export type Fit = 'core' | 'second' | 'other';
-
-export function fitOf(type: MemberType, a: Archetype): Fit {
-  return type.core === a ? 'core' : type.second === a ? 'second' : 'other';
-}
-
-export interface StageBalance {
-  stage: (typeof STAGES)[number];
-  /** 이 단계로 적은 업무 이름 */
-  tasks: string[];
-  /** 이 단계의 방식이 주 유형인 팀원 */
-  core: number[];
-  /** 이 단계의 방식이 보조 유형인 팀원 */
-  second: number[];
-}
-
-/** 다섯 단계 모두, 업무 수와 그 방식을 주·보조 유형으로 가진 팀원을 나란히 */
-export function stageBalance(tasks: readonly TeamTask[], members: readonly Member[]): StageBalance[] {
-  const by = membersByArchetype(members);
-  return STAGES.map((stage) => ({
-    stage,
-    tasks: tasks.filter((t) => t.stage === stage.id).map((t) => t.name.trim() || '이름 없는 업무'),
-    core: by[stage.archetype].core,
-    second: by[stage.archetype].second,
-  }));
-}
-
-/** 팀원별로 맡은 업무 수 */
-export function ownerLoad(tasks: readonly TeamTask[], memberCount: number): number[] {
-  const out = Array.from({ length: memberCount }, () => 0);
-  for (const t of tasks) if (t.owner !== null && t.owner < memberCount) out[t.owner]++;
-  return out;
+/** 가장 많이·적게 들어 있는 방식. 다섯이 모두 같으면 null */
+export function extremes(total: Record<Archetype, number>): { most: Archetype[]; least: Archetype[] } | null {
+  const vals = CYCLE.map((a) => total[a]);
+  const hi = Math.max(...vals);
+  const lo = Math.min(...vals);
+  if (hi === lo) return null;
+  return { most: CYCLE.filter((a) => total[a] === hi), least: CYCLE.filter((a) => total[a] === lo) };
 }

@@ -840,6 +840,89 @@ fieldset.question legend {
   border-top: 2px dashed var(--map-line);
 }
 
+/* ── 팀 오각형 ─────────────────────────────────────── */
+
+.pent-ring {
+  fill: none;
+  stroke: var(--grid);
+  stroke-width: 1;
+}
+.pent-spoke {
+  stroke: var(--grid);
+  stroke-width: 1;
+}
+.pent-total {
+  fill: var(--accent-soft);
+  stroke: var(--orange-ui);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+.pent-core {
+  fill: var(--orange-ui);
+  stroke: var(--surface);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+.pent-dot {
+  fill: var(--surface);
+  stroke: var(--orange-ui);
+  stroke-width: 2;
+}
+.pent-even {
+  fill: none;
+  stroke: var(--text-2);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
+}
+.pent-name {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  fill: var(--text);
+}
+.pent-count {
+  font-family: var(--font-body);
+  font-size: 12px;
+  fill: var(--text-2);
+}
+.pent-data {
+  animation: spread 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.pent-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.pent-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.swatch {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+}
+.swatch-core {
+  background: var(--orange-ui);
+}
+.swatch-total {
+  background: var(--accent-soft);
+  border: 2px solid var(--orange-ui);
+}
+.swatch-even {
+  display: inline-block;
+  width: 22px;
+  height: 0;
+  border-top: 2px dashed var(--text-2);
+}
+
 /* ── 팀 화면 ───────────────────────────────────────── */
 
 textarea,
@@ -874,13 +957,6 @@ textarea {
   color: var(--danger);
   font-size: 14px;
 }
-.signal {
-  background: var(--banner-bg);
-  border-left: 4px solid var(--banner-edge);
-  border-radius: 10px;
-  padding: 10px 12px;
-  margin: 10px 0 0;
-}
 .toggle {
   display: inline-flex;
   align-items: center;
@@ -895,8 +971,7 @@ textarea {
   accent-color: var(--orange-ui);
 }
 .member-list,
-.composition,
-.task-list {
+.composition {
   list-style: none;
   padding: 0;
   margin: 0;
@@ -977,118 +1052,10 @@ textarea {
   margin: 0;
   min-width: 0;
 }
-.task {
-  display: grid;
-  gap: 6px;
-  padding: 12px 0;
-  border-top: 1px solid var(--grid);
-}
-.task-row {
-  display: flex;
-  gap: 8px;
-}
-.task-row input {
-  flex: 1;
-  min-width: 0;
-}
 .btn-small {
   min-height: 46px;
   padding: 6px 14px;
   font-size: 15px;
-}
-.task-fit {
-  padding: 10px 12px;
-  border: 1px solid var(--grid);
-  border-radius: 10px;
-  background: var(--surface-2);
-}
-.task-fit-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0 0 6px;
-  font-weight: 700;
-  font-size: 14px;
-}
-.task-unset {
-  margin: 0;
-}
-.task-owner {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px 10px;
-}
-.task-owner label {
-  font-weight: 700;
-  font-size: 14px;
-}
-.task-owner select {
-  flex: 1 1 200px;
-  min-width: 0;
-}
-.chip-fit-core {
-  background: var(--accent-strong);
-  color: var(--accent-ink);
-}
-.chip-fit-second {
-  background: var(--strong);
-  color: var(--strong-ink);
-}
-.chip-fit-other {
-  border: 1px solid var(--border);
-  color: var(--text-2);
-}
-.chip-load {
-  border: 1px solid var(--border);
-  color: var(--text-2);
-}
-.balance {
-  width: 100%;
-  border-collapse: collapse;
-  font-variant-numeric: tabular-nums;
-}
-.balance th,
-.balance td {
-  padding: 8px 6px;
-  border-top: 1px solid var(--grid);
-  text-align: right;
-}
-.balance thead th {
-  border-top: 0;
-  color: var(--text-3);
-  font-size: 13px;
-  font-weight: 700;
-}
-.balance th[scope='row'],
-.balance thead th:first-child {
-  text-align: left;
-}
-.balance th[scope='row'] {
-  font-weight: 700;
-}
-.balance-stage {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.balance th[scope='row'] small {
-  display: block;
-  font-family: var(--font-display);
-  font-size: 12px;
-  color: var(--text-3);
-}
-.balance .is-idle td {
-  color: var(--text-3);
-}
-.balance .is-gap td:nth-child(2) {
-  color: var(--danger);
-  font-weight: 700;
-}
-.signals {
-  list-style: none;
-  padding: 0;
-  margin: 4px 0 0;
 }
 .team-entry .btn {
   margin-top: 4px;
@@ -1255,6 +1222,16 @@ input[type='file'] {
   }
   to {
     stroke-dashoffset: 0;
+  }
+}
+@keyframes spread {
+  from {
+    transform: scale(0.15);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
   }
 }
 @keyframes pop {
