@@ -6,7 +6,8 @@ import { ARCHETYPES, type Archetype, type Picks, type Summary } from './types';
  * 담는 것: 버전, 별명(선택), A 평균 5개, B 상황별 best/worst, 동점일 때 본인이 고른 것.
  * A 문항별 응답은 넣지 않는다.
  */
-export const CODE_VERSION = 3;
+/** v4: 원글(Boris Cherny) 정의에 맞춰 문항을 고침. v3 이하 코드는 문항 뜻이 달라 열지 않는다. */
+export const CODE_VERSION = 4;
 export const NICK_MAX = 20;
 
 interface Payload {

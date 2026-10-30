@@ -82,7 +82,11 @@ describe('버전', () => {
     expect(decode(rawCode({ tendency: [80, 45.4, 75.4, 35.8, 18.3] }))).toEqual({ ok: false, error: 'old-version' });
   });
 
+  it('v3(원글 정의로 고치기 전 문항)도 이전 버전', () => {
+    expect(decode(rawCode({ ...validPayload(), v: 3 }))).toEqual({ ok: false, error: 'old-version' });
+  });
+
   it('더 새 버전은 따로 알린다', () => {
-    expect(decode(rawCode({ ...validPayload(), v: 4 }))).toEqual({ ok: false, error: 'unsupported-version' });
+    expect(decode(rawCode({ ...validPayload(), v: 5 }))).toEqual({ ok: false, error: 'unsupported-version' });
   });
 });

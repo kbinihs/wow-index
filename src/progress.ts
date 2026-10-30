@@ -38,7 +38,8 @@ export interface Progress {
   finishedAt: string | null;
 }
 
-const KEY = 'wa:progress:v3';
+// v4: 문항 문구가 바뀌어 이전 진행 기록은 이어 쓰지 않는다
+const KEY = 'wa:progress:v4';
 
 function randomSeed(): number {
   try {

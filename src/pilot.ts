@@ -9,7 +9,8 @@ import { ARCHETYPES, type Archetype, type Picks } from './types';
  */
 export interface PilotRecord {
   kind: 'wow-index-pilot';
-  v: 1;
+  /** v2: 원글 정의에 맞춰 문항을 고친 뒤. v1 파일과 섞어 분석하지 않는다. */
+  v: 2;
   label: string | null;
   exportedAt: string;
   startedAt: string;
@@ -35,7 +36,7 @@ export function buildPilotRecord(p: Progress, label: string | null, now = new Da
   const trimmed = (label ?? '').trim().slice(0, LABEL_MAX);
   return {
     kind: 'wow-index-pilot',
-    v: 1,
+    v: 2,
     label: trimmed || null,
     exportedAt: now.toISOString(),
     startedAt: p.startedAt,
@@ -64,7 +65,7 @@ function isRecord(x: unknown): x is PilotRecord {
   const r = x as PilotRecord;
   return (
     r.kind === 'wow-index-pilot' &&
-    r.v === 1 &&
+    r.v === 2 &&
     typeof r.a === 'object' &&
     ITEMS.every((i) => Number.isInteger(r.a[i.id]) && r.a[i.id] >= 1 && r.a[i.id] <= 5) &&
     Array.isArray(r.b) &&
