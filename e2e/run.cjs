@@ -1,0 +1,211 @@
+// 빌드된 dist/index.html을 file://로 열고, 네트워크를 모두 막은 상태에서 예시 1 응답으로 끝까지 진행한다.
+// 사용: npm run build && node e2e/run.cjs [스크린샷 폴더]
+const { chromium } = require('playwright');
+const path = require('path');
+const fs = require('fs');
+
+const FILE = 'file://' + path.resolve(__dirname, '../dist/index.html');
+const SHOTS = process.argv[2];
+
+const EX1_A = {
+  A01: 5, A02: 5, A03: 4, A04: 4, A05: 3, A06: 3, A07: 3, A08: 3, A09: 5, A10: 4,
+  A11: 4, A12: 4, A13: 3, A14: 3, A15: 3, A16: 2, A17: 2, A18: 2, A19: 2, A20: 2,
+};
+const EX1_B = ['PM', 'PM', 'PM', 'BS', 'SB', 'SG'];
+let failures = 0;
+const check = (ok, msg) => {
+  console.log(`${ok ? 'PASS' : 'FAIL'}  ${msg}`);
+  if (!ok) failures++;
+};
+
+async function noHScroll(page, label) {
+  const { sw, cw } = await page.evaluate(() => ({
+    sw: document.documentElement.scrollWidth,
+    cw: document.documentElement.clientWidth,
+  }));
+  check(sw <= cw, `가로 스크롤 없음 — ${label} (scrollWidth ${sw}, clientWidth ${cw})`);
+}
+
+async function shot(page, name) {
+  if (!SHOTS) return;
+  fs.mkdirSync(SHOTS, { recursive: true });
+  await page.screenshot({ path: path.join(SHOTS, `${name}.png`), fullPage: true });
+}
+
+async function answerA(page, answers, scheme, inspect) {
+  for (let p = 0; p < 5; p++) {
+    const ids = await page.$$eval('fieldset.likert input[type=radio][value="1"]', (els) => els.map((e) => e.name));
+    for (const id of ids) await page.check(`input[name="${id}"][value="${answers[id]}"]`);
+    if (inspect && p === 0) {
+      await shot(page, `${scheme}-01-A`);
+      await noHScroll(page, 'A');
+    }
+    if (inspect && p === 2) {
+      await page.reload();
+      const kept = await page.$$eval('fieldset.likert input:checked', (els) => els.length);
+      check(kept === 4, `새로고침 뒤 응답 유지 (A ${p + 1}/5, 체크 ${kept}개)`);
+    }
+    await page.click('button:has-text("다음")');
+  }
+}
+
+async function answerB(page, choices, scheme, inspect) {
+  for (let i = 0; i < 6; i++) {
+    const [best, worst] = choices[i];
+    const next = page.locator('.step-nav .btn-primary');
+    if (inspect) check(await next.isDisabled(), `B${i + 1} 선택 전 [다음] 비활성`);
+    await page.click(`button[data-role="${best}"]`);
+    await page.click(`button[data-role="${worst}"]`);
+    if (inspect && i === 0) {
+      await shot(page, `${scheme}-02-B`);
+      await noHScroll(page, 'B');
+    }
+    await next.click();
+  }
+}
+
+async function run(colorScheme) {
+  let tiedCode = '';
+  const browser = await chromium.launch();
+  const context = await browser.newContext({ viewport: { width: 375, height: 812 }, colorScheme, acceptDownloads: true });
+  const external = [];
+  await context.route(/^https?:/, (route) => {
+    external.push(route.request().url());
+    return route.abort();
+  });
+  const page = await context.newPage();
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(String(e)));
+
+  console.log(`\n── ${colorScheme} ──`);
+  await page.goto(FILE);
+  await shot(page, `${colorScheme}-00-start`);
+  await noHScroll(page, '시작');
+  await page.click('text=시작하기');
+
+  await answerA(page, EX1_A, colorScheme, true);
+  await answerB(page, EX1_B, colorScheme, true);
+
+  // 결과
+  await page.waitForSelector('.result-head');
+  const text = await page.innerText('main');
+  check((await page.innerText('h1')).trim() === 'Prototyper-Sweeper', '유형 Prototyper-Sweeper');
+  check(text.includes('새로운 것을 시도하는 일을 가장 많이 선택했고, 그다음은 줄이고 끝내는 일이었습니다.'), '머리 문장');
+  check(!text.includes('상황 선택에서') && !text.includes('끌림') && !text.includes('끌렸'), '상황 선택 섹션 없음, 끌림 표현 없음');
+  check(/→ Builder/.test(text), '성장 방향 Builder');
+  check(/Grower[\s\S]*Maintainer/.test(await page.innerText('section[aria-labelledby="sec-partners"]')), '필요한 짝 Grower, Maintainer');
+  check(text.includes('새로운 것을 해 보고, 안 되는 것은 빨리 접습니다.'), '조합 풀이 Prototyper-Sweeper');
+  check((await page.$('.type-map svg')) !== null, '다섯 방식 지도');
+  check(!text.includes('다른 사람이 보낸 결과'), '내 결과로 표시');
+  check((await page.$('#share-link')) === null, 'file://에서는 결과 링크 없이 코드만');
+  await noHScroll(page, '결과');
+  await shot(page, `${colorScheme}-05-result`);
+
+  // 동점: 다른 브라우저에서 A를 모두 3, B 가장 맡고 싶음이 P2·B2
+  {
+    const ctx = await browser.newContext({ viewport: { width: 375, height: 812 }, colorScheme });
+    await ctx.route(/^https?:/, (r) => r.abort());
+    const p3 = await ctx.newPage();
+    await p3.goto(FILE);
+    await p3.click('text=시작하기');
+    await answerA(p3, Object.fromEntries(Object.keys(EX1_A).map((k) => [k, 3])));
+    await answerB(p3, ['PM', 'PM', 'BS', 'BG', 'SM', 'GP']);
+    await p3.waitForSelector('text=주 유형 고르기');
+    const pickText = await p3.innerText('main');
+    check(pickText.includes('Prototyper와 Builder의 점수가 같습니다.'), '동점 고르기 화면');
+    await noHScroll(p3, '고르기');
+    await shot(p3, `${colorScheme}-04-pick`);
+    await p3.check('input[name="pick-core"][value="B"]');
+    await p3.click('button:has-text("확인")');
+    await p3.waitForSelector('.result-head');
+    check((await p3.innerText('h1')).trim() === 'Builder-Prototyper', '고른 대로 Builder-Prototyper');
+    await p3.fill('#share-nick', '나');
+    tiedCode = await p3.inputValue('#share-code');
+    await ctx.close();
+  }
+
+  // 받은 결과로 열기(다른 브라우저 = 저장소 없음)
+  const code = await page.inputValue('#share-code');
+  const other = await browser.newContext({ viewport: { width: 375, height: 812 }, colorScheme });
+  await other.route(/^https?:/, (r) => r.abort());
+  const p2 = await other.newPage();
+  await p2.goto(FILE);
+  await p2.fill('#code-input', code);
+  await p2.click('button:has-text("결과 열기")');
+  await p2.waitForSelector('.result-head');
+  const t2 = await p2.innerText('main');
+  check(t2.includes('다른 사람이 보낸 결과') && t2.includes('Prototyper-Sweeper') && !t2.includes('내 응답 지우기'), '받은 코드는 읽기 전용으로 열림');
+  await other.close();
+
+  // 팀 화면: 팀 코드 두 개 + 잘못된 줄 + 중복
+  await page.goto(FILE + '#/');
+  await page.goto(FILE + '#/result/' + code);
+  await page.fill('#share-nick', '가');
+  const myTeamCode = await page.inputValue('#share-code');
+  await page.goto(FILE + '#/team');
+  await page.fill('#team-codes', [myTeamCode, tiedCode, 'not-a-code!', myTeamCode].join('\n'));
+  await page.click('button:has-text("불러오기")');
+  const teamText = await page.innerText('main');
+  check(teamText.includes('팀원 2명'), '팀원 2명 불러옴');
+  check(teamText.includes('3번째 줄') && teamText.includes('4번째 줄은 앞의 코드와 같아 뺐습니다.'), '잘못된 줄·중복 안내');
+  check(/가\s*Prototyper-Sweeper/.test(teamText) && /나\s*Builder-Prototyper/.test(teamText), '팀원 유형 목록');
+  await page.check('text=이름 숨기기');
+  const hidden = await page.innerText('section[aria-labelledby="sec-members"]');
+  check(hidden.includes('팀원 1') && !/\n가\n/.test(hidden), '이름 숨기기');
+  await page.uncheck('text=이름 숨기기');
+  await page.fill('#task-name-0', '보고서 양식 정리');
+  await page.selectOption('#task-stage-0', 'close');
+  await page.fill('#task-name-1', '후원자 관계 관리');
+  await page.selectOption('#task-stage-1', 'keep');
+  const cov = await page.innerText('section[aria-labelledby="sec-coverage"]');
+  check(/정리·종료[\s\S]*보고서 양식 정리[\s\S]*보조 유형\s*가/.test(cov), '정리·종료 업무와 Sweeper 보조 유형 팀원');
+  check(cov.includes('유지 단계 업무가 1개인데, Maintainer를 주·보조 유형으로 가진 팀원이 없습니다.'), '맡을 팀원이 없는 단계 안내');
+  await noHScroll(page, '팀');
+  await shot(page, `${colorScheme}-06-team`);
+
+  // 응답 파일 내보내기 → 분석
+  await page.goto(FILE + '#/export');
+  check(await page.locator('button:has-text("파일 내려받기")').isDisabled(), '동의 전 내려받기 비활성');
+  await page.fill('#pilot-label', 'P07');
+  await page.check('text=내 응답 파일을 파일럿 분석에 쓰는 데 동의합니다.');
+  const [download] = await Promise.all([page.waitForEvent('download'), page.click('button:has-text("파일 내려받기")')]);
+  check(/^wow-index-pilot-\d{12}-P07\.json$/.test(download.suggestedFilename()), `파일 이름 ${download.suggestedFilename()}`);
+  await page.click('text=파일 내용 보기');
+  const exported = JSON.parse(await page.inputValue('textarea[aria-label="응답 파일 내용"]'));
+  check(exported.kind === 'wow-index-pilot' && exported.a.A01 === 5 && exported.result.core === 'P' && !('nick' in exported), '응답 파일 내용');
+  await noHScroll(page, '내보내기');
+  const exported2 = { ...exported, label: 'P08', a: { ...exported.a, A01: 1, A02: 2 } };
+  await page.goto(FILE + '#/analysis');
+  await page.setInputFiles('#pilot-files', [
+    { name: 'a.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(exported)) },
+    { name: 'b.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(exported2)) },
+    { name: 'c.json', mimeType: 'application/json', buffer: Buffer.from('{"kind":"x"}') },
+  ]);
+  await page.waitForSelector('text=참여자 2명');
+  const an = await page.innerText('main');
+  check(an.includes('형식이 맞지 않아 뺀 것: 1개'), '형식이 다른 파일 안내');
+  check(an.includes('문항 분석') && an.includes('상황 선택 분포') && an.includes('크론바흐 알파'), '분석 화면 구성');
+  await page.click('text=CSV 내용 보기');
+  const csvText = await page.inputValue('textarea[aria-label="CSV 내용"]');
+  check(csvText.split('\n').filter(Boolean).length === 3 && csvText.includes('P07') && csvText.includes('P08'), 'CSV 두 줄');
+  await noHScroll(page, '분석');
+  await shot(page, `${colorScheme}-07-analysis`);
+
+  // 잘못된 코드
+  await page.goto(FILE + '#/');
+  await page.fill('#code-input', 'abc$');
+  await page.click('button:has-text("결과 열기")');
+  check(await page.isVisible('#code-error'), '잘못된 코드 안내');
+
+  check(errors.length === 0, `페이지 오류 없음 ${errors.join(' | ')}`);
+  const nonFont = external.filter((u) => !/^https:\/\/fonts\.(googleapis|gstatic)\.com\//.test(u));
+  check(nonFont.length === 0, `폰트 외 외부 요청 없음 (폰트 요청 ${external.length - nonFont.length}건, 차단됨)`);
+  await browser.close();
+}
+
+(async () => {
+  await run('light');
+  await run('dark');
+  console.log(failures ? `\n${failures}개 실패` : '\n모두 통과');
+  process.exit(failures ? 1 : 0);
+})();

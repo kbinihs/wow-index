@@ -1,0 +1,130 @@
+/*
+ * 색·글꼴 토큰.
+ * 색은 World Vision 브랜드 리프레시 팔레트(Canva 'World Vision Brand Refresh Elements')에서 가져왔다.
+ * 규칙: 기본은 Orange·Midnight·White. 오렌지는 밝은 바탕에서 큰 제목·면·장식에만 쓰고 작은 글자에는 쓰지 않는다.
+ * 제목 글꼴 Degular는 웹 글꼴로 받을 수 없어 Inter Tight로 대신한다.
+ */
+:root {
+  color-scheme: light;
+  --font-body: 'Inter', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', '맑은 고딕', system-ui, sans-serif;
+  --font-display: 'Inter Tight', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', '맑은 고딕', system-ui, sans-serif;
+
+  /* 브랜드 팔레트 */
+  --wv-orange: #ff5515;
+  --wv-midnight: #111222;
+  --wv-white: #ffffff;
+  --field-50: #f3f2f0;
+  --field-100: #e9e7e3;
+  --field-200: #dedbd7;
+  --field-300: #d3d0c9;
+  --field-400: #c9c4bc;
+  --grey-500: #6d6a76;
+  --grey-600: #565461;
+  --grey-700: #3f3d4c;
+  --grey-800: #282737;
+  --orange-100: #ffebe1;
+  --orange-200: #ffd5bf;
+  --orange-400: #ffa57b;
+  --orange-800: #f14014;
+  --orange-900: #e32c13;
+  --red-800: #b10831;
+  --red-200: #e4b2be;
+
+  /* 화면 역할 */
+  --bg: var(--field-50);
+  --surface: var(--wv-white);
+  --surface-2: var(--field-100);
+  --text: var(--wv-midnight);
+  --text-2: var(--grey-700);
+  --text-3: var(--grey-600);
+  --border: var(--field-300);
+  --grid: var(--field-200);
+  /* 작은 그래픽(동그라미 테두리 등)에 쓰는 오렌지. 밝은 바탕에서 3:1을 넘도록 Orange 800 */
+  --orange-ui: var(--orange-800);
+  /* 오렌지 면 + 흰 글자. 흰 글자는 #FF5515 위에서 3.2라 19px 굵은 글자(큰 글자)에만 쓴다 */
+  --accent: var(--wv-orange);
+  --accent-ink: var(--wv-white);
+  /* 작은 글자가 놓이는 오렌지 면(배지 등): Orange 900, 흰 글자 4.5 */
+  --accent-strong: var(--orange-900);
+  --accent-soft: var(--orange-100);
+  /* 어두운 면 + 흰 글자 */
+  --strong: var(--wv-midnight);
+  --strong-ink: var(--wv-white);
+  --strong-soft: var(--field-100);
+  --focus: var(--wv-midnight);
+  --danger: var(--red-800);
+  --danger-ink: var(--wv-white);
+  --banner-bg: var(--orange-100);
+  --banner-edge: var(--wv-orange);
+  --map-line: var(--grey-600);
+
+  /* 문양은 어느 테마에서나 같은 색 */
+  --crest-field: var(--field-100);
+  --crest-orange: var(--wv-orange);
+  --crest-ink: var(--wv-midnight);
+}
+
+/* 다크: 시스템 설정을 따르되, 화면에서 테마를 직접 고른 경우(data-theme)가 우선한다 */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --bg: var(--wv-midnight);
+    --surface: var(--grey-800);
+    --surface-2: var(--grey-700);
+    --text: var(--wv-white);
+    --text-2: var(--field-200);
+    --text-3: var(--field-400);
+    --border: var(--grey-600);
+    --grid: var(--grey-700);
+    --accent-soft: #3d2419;
+    --strong: var(--wv-white);
+    --strong-ink: var(--wv-midnight);
+    --strong-soft: var(--grey-700);
+    --orange-ui: var(--wv-orange);
+    --focus: var(--wv-white);
+    --danger: var(--red-200);
+    --danger-ink: var(--wv-midnight);
+    --banner-bg: #3d2419;
+    --map-line: var(--field-300);
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: var(--wv-midnight);
+  --surface: var(--grey-800);
+  --surface-2: var(--grey-700);
+  --text: var(--wv-white);
+  --text-2: var(--field-200);
+  --text-3: var(--field-400);
+  --border: var(--grey-600);
+  --grid: var(--grey-700);
+  --accent-soft: #3d2419;
+  --strong: var(--wv-white);
+  --strong-ink: var(--wv-midnight);
+  --strong-soft: var(--grey-700);
+  --orange-ui: var(--wv-orange);
+  --focus: var(--wv-white);
+  --danger: var(--red-200);
+  --danger-ink: var(--wv-midnight);
+  --banner-bg: #3d2419;
+  --map-line: var(--field-300);
+}
+
+/* 인쇄는 항상 밝은 면 */
+@media print {
+  :root {
+    color-scheme: light;
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --surface-2: var(--field-100);
+    --text: #000000;
+    --text-2: #333333;
+    --text-3: #444444;
+    --border: #bbbbbb;
+    --grid: #dddddd;
+    --strong: var(--wv-midnight);
+    --strong-ink: #ffffff;
+    --map-line: #333333;
+  }
+}
