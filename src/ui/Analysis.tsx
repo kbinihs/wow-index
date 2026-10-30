@@ -6,7 +6,7 @@ import { ARCHETYPES } from '../types';
 import { announce, copyText, downloadText, Section, useFocusHeading } from './common';
 import { Crest } from './Crest';
 
-const ITEM_TEXT = Object.fromEntries(ITEMS.map((i) => [i.id, i.text]));
+const ITEM = Object.fromEntries(ITEMS.map((i) => [i.id, i]));
 /** 나머지 문항과의 상관이 이보다 낮으면 다시 볼 만한 문항으로 표시 */
 const LOW_REST = 0.3;
 
@@ -148,7 +148,7 @@ export function Analysis() {
                       {s.items.map((it) => (
                         <tr key={it.id}>
                           <th scope="row">
-                            <span class="item-id">{it.id}</span> {ITEM_TEXT[it.id]}
+                            <span class="item-id">{it.id}</span> <span class="item-facet">{ITEM[it.id].facet}</span> {ITEM[it.id].text}
                           </th>
                           <td>{fmt(it.mean)}</td>
                           <td>{fmt(it.sd)}</td>

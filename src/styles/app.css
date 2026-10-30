@@ -1200,6 +1200,15 @@ input[type='file'] {
   font-weight: 700;
   color: var(--text-3);
 }
+.item-facet {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0 8px;
+  white-space: nowrap;
+}
 .chip-low {
   margin-left: 6px;
   background: var(--danger);
