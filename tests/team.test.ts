@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { noCoverText } from '../src/data/teamText';
+import { noCoverText, noTaskText, onlyOneText } from '../src/data/teamText';
 import { encode } from '../src/codec';
 import {
   displayName,
+  fitOf,
   membersByArchetype,
+  ownerLoad,
   parseTeamCodes,
   scenarioDistribution,
-  stageCoverage,
+  stageBalance,
   STAGES,
   typeDistribution,
   type Member,
@@ -77,18 +79,33 @@ describe('팀 구성과 업무 단계', () => {
     expect(STAGES.map((s) => `${s.label}:${s.archetype}`)).toEqual(['시도:P', '구축:B', '개선·확장:G', '유지:M', '정리·종료:S']);
   });
 
-  it('업무가 있는 단계만, 그 단계 원형의 팀원과 함께', () => {
-    const tasks = [
-      { name: '보고서 양식 정리', stage: 'close' as const, note: '' },
-      { name: ' ', stage: 'close' as const, note: '' },
-      { name: '후원자 관계 관리', stage: 'keep' as const, note: '' },
-      { name: '단계 안 고름', stage: null, note: '' },
-    ];
-    expect(stageCoverage(tasks, ms)).toEqual([
-      { stage: STAGES[3], tasks: ['후원자 관계 관리'], core: [], second: [1] },
-      { stage: STAGES[4], tasks: ['보고서 양식 정리', '이름 없는 업무'], core: [], second: [0] },
-    ]);
-    expect(stageCoverage([], ms)).toEqual([]);
+  const task = (name: string, stage: 'try' | 'build' | 'grow' | 'keep' | 'close' | null, owner: number | null = null) => ({
+    name,
+    stage,
+    owner,
+    note: '',
+  });
+
+  it('다섯 단계 모두, 업무 수와 그 방식의 팀원을 나란히', () => {
+    const tasks = [task('보고서 양식 정리', 'close'), task(' ', 'close'), task('후원자 관계 관리', 'keep'), task('단계 안 고름', null)];
+    const r = stageBalance(tasks, ms);
+    expect(r.map((x) => x.stage.id)).toEqual(['try', 'build', 'grow', 'keep', 'close']);
+    expect(r[0]).toEqual({ stage: STAGES[0], tasks: [], core: [0], second: [] });
+    expect(r[3]).toEqual({ stage: STAGES[3], tasks: ['후원자 관계 관리'], core: [], second: [1] });
+    expect(r[4]).toEqual({ stage: STAGES[4], tasks: ['보고서 양식 정리', '이름 없는 업무'], core: [], second: [0] });
+    expect(stageBalance([], ms).every((x) => x.tasks.length === 0)).toBe(true);
+  });
+
+  it('담당자에게 업무 방식이 주·보조 유형인지', () => {
+    const t = { core: 'P' as const, second: 'S' as const };
+    expect(fitOf(t, 'P')).toBe('core');
+    expect(fitOf(t, 'S')).toBe('second');
+    expect(fitOf(t, 'M')).toBe('other');
+  });
+
+  it('팀원별 맡은 업무 수(범위 밖 순번은 무시)', () => {
+    const tasks = [task('가', 'try', 0), task('나', 'close', 0), task('다', 'keep', 2), task('라', 'grow'), task('마', 'grow', 9)];
+    expect(ownerLoad(tasks, 3)).toEqual([2, 0, 1]);
   });
 });
 
@@ -97,5 +114,10 @@ describe('팀 화면 문구', () => {
     expect(noCoverText('정리·종료', 2, 'S')).toBe(
       '정리·종료 단계 업무가 2개인데, Sweeper를 주·보조 유형으로 가진 팀원이 없습니다. 누가 어떤 지원을 받아 맡을지 이야기해 볼 만합니다.',
     );
+  });
+
+  it('그 방식을 가진 팀원이 한 명뿐일 때, 업무가 없는 단계', () => {
+    expect(onlyOneText('시도', 3, 'P', '가')).toBe('시도 단계 업무가 3개인데, Prototyper를 주·보조 유형으로 가진 팀원은 가 한 명입니다.');
+    expect(noTaskText('유지', 'M', 2)).toBe('Maintainer를 주 유형으로 가진 팀원이 2명인데, 이번 분기 업무 가운데 유지 단계는 없습니다.');
   });
 });

@@ -157,9 +157,25 @@ async function run(colorScheme) {
   await page.selectOption('#task-stage-0', 'close');
   await page.fill('#task-name-1', '후원자 관계 관리');
   await page.selectOption('#task-stage-1', 'keep');
+  await page.fill('#task-name-2', '새 캠페인 아이디어');
+  check((await page.innerText('.task-list li:nth-child(3)')).includes('단계를 고르면 이 업무에 맞는 팀원이 나옵니다.'), '단계 안 고른 업무 안내');
+  await page.selectOption('#task-stage-2', 'try');
+  const task0 = await page.innerText('.task-list li:nth-child(1)');
+  check(/Sweeper의 방식이 맞는 팀원[\s\S]*주 유형\s*없음[\s\S]*보조 유형\s*가/.test(task0), '업무별로 맞는 팀원');
+  await page.selectOption('#task-owner-0', '1');
+  check((await page.innerText('.task-list li:nth-child(1)')).includes('담당자의 주·보조 유형이 아닌 방식'), '담당자 유형과 다른 업무');
+  await page.selectOption('#task-owner-0', '0');
+  check((await page.innerText('.task-list li:nth-child(1)')).includes('담당자의 보조 유형과 같은 방식'), '담당자 보조 유형과 같은 업무');
+  await page.selectOption('#task-owner-2', '0');
+  check((await page.innerText('.task-list li:nth-child(3)')).includes('담당자의 주 유형과 같은 방식'), '담당자 주 유형과 같은 업무');
+  check(/가[\s\S]*담당 2/.test(await page.innerText('section[aria-labelledby="sec-members"]')), '팀원별 담당 수');
   const cov = await page.innerText('section[aria-labelledby="sec-coverage"]');
-  check(/정리·종료[\s\S]*보고서 양식 정리[\s\S]*보조 유형\s*가/.test(cov), '정리·종료 업무와 Sweeper 보조 유형 팀원');
+  check(/정리·종료[\s\S]*1개\s*0명\s*1명/.test(cov), '단계별 업무 수와 팀원 수');
   check(cov.includes('유지 단계 업무가 1개인데, Maintainer를 주·보조 유형으로 가진 팀원이 없습니다.'), '맡을 팀원이 없는 단계 안내');
+  check(cov.includes('Builder를 주 유형으로 가진 팀원이 1명인데, 이번 분기 업무 가운데 구축 단계는 없습니다.'), '업무가 없는 단계 안내');
+  await page.click('button:has-text("불러오기")');
+  check(!/담당 \d/.test(await page.innerText('section[aria-labelledby="sec-members"]')), '다시 불러오면 담당 초기화');
+  await page.selectOption('#task-owner-0', '0');
   await noHScroll(page, '팀');
   await shot(page, `${colorScheme}-06-team`);
 

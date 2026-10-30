@@ -135,24 +135,43 @@ export const MAX_TASKS = 7;
 export interface TeamTask {
   name: string;
   stage: StageId | null;
-  /** 이번 분기 담당·필요한 지원(진행자가 대화하며 채움, 계산하지 않음) */
+  /** 담당 팀원 순번(정하지 않았으면 null) */
+  owner: number | null;
+  /** 필요한 지원(진행자가 대화하며 채움, 계산하지 않음) */
   note: string;
 }
 
-export interface StageCoverage {
+/** 업무 단계의 방식이 담당자에게 어떤 자리인지 */
+export type Fit = 'core' | 'second' | 'other';
+
+export function fitOf(type: MemberType, a: Archetype): Fit {
+  return type.core === a ? 'core' : type.second === a ? 'second' : 'other';
+}
+
+export interface StageBalance {
   stage: (typeof STAGES)[number];
   /** 이 단계로 적은 업무 이름 */
   tasks: string[];
+  /** 이 단계의 방식이 주 유형인 팀원 */
   core: number[];
+  /** 이 단계의 방식이 보조 유형인 팀원 */
   second: number[];
 }
 
-/** 업무가 하나라도 있는 단계만, 그 단계의 원형을 주·보조 유형으로 가진 팀원과 함께 */
-export function stageCoverage(tasks: readonly TeamTask[], members: readonly Member[]): StageCoverage[] {
+/** 다섯 단계 모두, 업무 수와 그 방식을 주·보조 유형으로 가진 팀원을 나란히 */
+export function stageBalance(tasks: readonly TeamTask[], members: readonly Member[]): StageBalance[] {
   const by = membersByArchetype(members);
-  return STAGES.flatMap((stage) => {
-    const names = tasks.filter((t) => t.stage === stage.id).map((t) => t.name.trim() || '이름 없는 업무');
-    if (!names.length) return [];
-    return [{ stage, tasks: names, core: by[stage.archetype].core, second: by[stage.archetype].second }];
-  });
+  return STAGES.map((stage) => ({
+    stage,
+    tasks: tasks.filter((t) => t.stage === stage.id).map((t) => t.name.trim() || '이름 없는 업무'),
+    core: by[stage.archetype].core,
+    second: by[stage.archetype].second,
+  }));
+}
+
+/** 팀원별로 맡은 업무 수 */
+export function ownerLoad(tasks: readonly TeamTask[], memberCount: number): number[] {
+  const out = Array.from({ length: memberCount }, () => 0);
+  for (const t of tasks) if (t.owner !== null && t.owner < memberCount) out[t.owner]++;
+  return out;
 }
