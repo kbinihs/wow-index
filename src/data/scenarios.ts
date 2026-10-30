@@ -10,7 +10,7 @@ export const B_GUIDE =
   '아래 일들은 모두 필요해서 팀이 나누어 맡기로 했습니다. 필요한 권한과 지원이 주어진다면, 내가 가장 맡고 싶은 역할 하나와 가장 맡고 싶지 않은 역할 하나를 고르세요.';
 
 /** 두 번째 상황부터는 전제만 짧게 다시 보여 준다(고르는 방법은 화면의 단계 표시가 알려 준다) */
-export const B_GUIDE_SHORT = '아래 역할은 모두 필요한 일이고, 맡는 데 필요한 권한과 지원은 주어집니다.';
+export const B_GUIDE_SHORT = '아래 역할은 모두 팀에 필요한 일이고, 어느 역할을 맡든 그에 맞는 권한과 지원이 주어집니다.';
 
 export const SCENARIOS: readonly Scenario[] = [
   {

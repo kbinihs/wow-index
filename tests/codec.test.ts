@@ -99,6 +99,7 @@ describe('붙여 넣은 글에서 코드만 꺼내기', () => {
   const code = encode(EX1, '가나');
   it('결과 링크, 메신저에서 복사한 줄, 코드만', () => {
     expect(extractCode(`https://example.org/index.html#/result/${code}`)).toBe(code);
+    expect(extractCode(`결과 링크(https://example.org/#/result/${code})입니다`)).toBe(code);
     expect(extractCode(`[홍길동] [오후 3:12] ${code}`)).toBe(code);
     expect(extractCode(`홍길동: ${code}`)).toBe(code);
     expect(extractCode(`  ${code}  `)).toBe(code);

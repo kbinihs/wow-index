@@ -91,7 +91,7 @@ function ResultView({
     <main class="page result">
       {!own && (
         <p class="notice" role="note">
-          이 브라우저에서 만든 결과가 아니어서 보기만 할 수 있습니다.
+          이 브라우저에 저장된 내 응답의 결과가 아니어서 보기만 할 수 있습니다.
         </p>
       )}
 
@@ -259,12 +259,15 @@ function Share({ summary, initialNick }: { summary: Summary; initialNick: string
   return (
     <Section title="공유" id="sec-share">
       <p class="notice" role="note">
-        링크나 코드를 다른 사람에게 보내면 내 결과 요약(다섯 방식 점수, 상황별로 고른 역할)과 적은 별명이 함께 전달됩니다. 문항별 응답은 들어가지 않습니다.
+        팀 코드나 결과 링크를 다른 사람에게 보내면 내 결과 요약(다섯 방식 점수, 상황별로 고른 역할)과 아래에 적은 별명이 함께 전달됩니다. 문항별 응답은 들어가지 않습니다.
       </p>
 
       <div class="field no-print">
         <label for="share-nick">별명(선택, {NICK_MAX}자까지)</label>
-        <input id="share-nick" maxLength={NICK_MAX} value={nick} onInput={(e) => setNick((e.target as HTMLInputElement).value)} />
+        <input id="share-nick" maxLength={NICK_MAX} value={nick} onInput={(e) => {
+            setNick((e.target as HTMLInputElement).value);
+            setStatus('');
+          }} />
       </div>
 
       <div class="field no-print">

@@ -98,13 +98,13 @@ async function run(colorScheme) {
   await page.waitForSelector('.result-head');
   const text = await page.innerText('main');
   check((await page.innerText('h1')).trim() === 'Prototyper-Sweeper', '유형 Prototyper-Sweeper');
-  check(text.includes('선택한 답을 모아 보니 새 아이디어를 내고 만들어 보는 일이 가장 앞섰고, 그다음은 다듬고 덜어 내는 일이었습니다.'), '머리 문장');
+  check(text.includes('응답을 모아 보니 새 아이디어를 내고 만들어 보는 일이 가장 앞섰고, 그다음은 다듬고 덜어 내는 일이었습니다.'), '머리 문장');
   check(!text.includes('상황 선택에서') && !text.includes('끌림') && !text.includes('끌렸'), '상황 선택 섹션 없음, 끌림 표현 없음');
   check(/→ Builder/.test(text), '성장 방향 Builder');
   check(/Grower[\s\S]*Maintainer/.test(await page.innerText('section[aria-labelledby="sec-partners"]')), '채워 줄 짝 Grower, Maintainer');
   check(text.includes('많이 만들어 보고, 안 되는 것은 빨리 걷어 냅니다.'), '조합 풀이 Prototyper-Sweeper');
   check((await page.$('.type-map svg')) !== null, '다섯 방식 지도');
-  check(!text.includes('이 브라우저에서 만든 결과가 아니어서'), '내 결과로 표시');
+  check(!text.includes('이 브라우저에 저장된 내 응답의 결과가 아니어서'), '내 결과로 표시');
   check((await page.$('#share-link')) === null, 'file://에서는 결과 링크 없이 코드만');
   await noHScroll(page, '결과');
   await shot(page, `${colorScheme}-05-result`);
@@ -117,7 +117,7 @@ async function run(colorScheme) {
   await page.goForward();
   await page.waitForSelector('.result-head');
   check(
-    (await page.$('#share-code')) !== null && !(await page.innerText('main')).includes('이 브라우저에서 만든 결과가 아니어서'),
+    (await page.$('#share-code')) !== null && !(await page.innerText('main')).includes('이 브라우저에 저장된 내 응답의 결과가 아니어서'),
     '앞으로 오면 다시 내 결과',
   );
 
@@ -194,7 +194,7 @@ async function run(colorScheme) {
   await p2.waitForSelector('.result-head');
   const t2 = await p2.innerText('main');
   check(
-    t2.includes('이 브라우저에서 만든 결과가 아니어서') && t2.includes('Prototyper-Sweeper') && !t2.includes('내 응답 지우기'),
+    t2.includes('이 브라우저에 저장된 내 응답의 결과가 아니어서') && t2.includes('Prototyper-Sweeper') && !t2.includes('내 응답 지우기'),
     '받은 코드는 읽기 전용으로 열림',
   );
   await other.close();

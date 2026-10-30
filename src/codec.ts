@@ -105,7 +105,7 @@ function toSummary(p: Record<string, unknown>): Summary | null {
  * 코드는 늘 '{"v'의 base64인 'eyJ'로 시작한다.
  */
 export function extractCode(input: string): string {
-  const link = input.match(/#\/result\/([^\s?#]+)/);
+  const link = input.match(/#\/result\/([A-Za-z0-9_-]+)/);
   if (link) return link[1];
   const token = input.match(/eyJ[A-Za-z0-9_-]{16,}/);
   return (token ? token[0] : input).trim();

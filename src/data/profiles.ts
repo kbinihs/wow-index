@@ -128,7 +128,7 @@ export const PROFILES: Record<Archetype, Profile> = {
       '정보 유출이나 사고로 이어질 빈틈을 찾아 막습니다.',
       '규모가 커져도 비용과 시간이 늘지 않게 운영을 손봅니다.',
     ],
-    fits: '장기 사업 운영, 후원자·참여자 정보 관리, 회계·규정 준수 점검, 운영 시스템 관리, 위험 관리',
+    fits: '장기 사업 운영하기, 후원자·참여자 정보 관리하기, 회계·규정 준수 점검하기, 운영 시스템 관리하기, 위험 관리하기',
     cautions: [
       '바꿔야 할 때도 하던 방식을 고집할 수 있습니다.',
       '안정을 지키려다 새로운 시도를 막는 사람으로 보일 수 있습니다.',
@@ -289,7 +289,7 @@ export const PARTNER: Record<Archetype, Partial<Record<Archetype, string>>> = {
 // ── 결과 머리 문장 ─────────────────────────────────────
 
 export const leadText = (core: Archetype, second: Archetype) =>
-  `선택한 답을 모아 보니 ${josa(workName(core), '이', '가')} 가장 앞섰고, 그다음은 ${workName(second)}이었습니다.`;
+  `응답을 모아 보니 ${josa(workName(core), '이', '가')} 가장 앞섰고, 그다음은 ${workName(second)}이었습니다.`;
 
 /** 1·2위 평균 차이가 작을 때(다섯 방식이 고르게 나온 때는 FLAT_TEXT만 붙인다) */
 export const CLOSE_PAIR_TEXT = '두 방식의 차이는 크지 않았습니다.';

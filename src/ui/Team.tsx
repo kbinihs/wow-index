@@ -119,8 +119,10 @@ export function Team() {
               {members.map((m, i) => (
                 <li key={i}>
                   <Crest archetype={types[i].core} size={32} />
-                  <span class="member-name">{displayName(m, i, hide)}</span>
-                  <span class="member-type">{typeName(types[i].core, types[i].second)}</span>
+                  <span class="member-text">
+                    <span class="member-name">{displayName(m, i, hide)}</span>{' '}
+                    <span class="member-type">{typeName(types[i].core, types[i].second)}</span>
+                  </span>
                 </li>
               ))}
             </ul>

@@ -898,6 +898,7 @@ fieldset.question legend {
 .phase-option {
   position: relative;
   display: grid;
+  align-content: start;
   gap: 2px;
   padding: 10px 12px;
   border: 1px solid var(--border);
@@ -1069,18 +1070,23 @@ textarea {
 .member-list li {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 4px 10px;
+  gap: 10px;
   padding: 8px 0;
   border-top: 1px solid var(--grid);
 }
+.member-text {
+  flex: 1;
+  min-width: 0;
+}
 .member-name {
   font-weight: 700;
+  margin-right: 10px;
 }
 .member-type {
   font-family: var(--font-display);
   font-weight: 700;
   color: var(--text-2);
+  white-space: nowrap;
 }
 .composition li {
   padding: 12px 0;
@@ -1437,6 +1443,12 @@ input[type='file'] {
   /* 종이에는 보낼 링크·코드가 없으므로 공유 카드 전체를 뺀다 */
   section[aria-labelledby='sec-share'] {
     display: none !important;
+  }
+  /* 배경 그래픽을 끄고 인쇄해도 범례 색 칸과 인원 칩이 남도록 */
+  .swatch,
+  .chip {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
   * {
     animation: none !important;

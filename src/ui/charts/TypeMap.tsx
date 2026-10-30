@@ -80,7 +80,8 @@ export function TypeMap({ placement }: { placement: Placement }) {
             // 그래야 선이 이름을 가로지르지 않는다. 주 유형은 테두리 원만큼 더 띄운다.
             const halo = n.role === 'core' ? 8 : 0;
             const below = n.i === 2 || n.i === 3;
-            const lx = n.x;
+            // 옆 두 점(B·M)은 이름을 바깥으로 비켜 맨 위 점에서 오는 선과 화살표가 닿지 않게 한다
+            const lx = n.i === 1 ? n.x + 12 : n.i === 4 ? n.x - 12 : n.x;
             const ly = below ? n.y + r + halo + 17 : n.y - r - halo - 22;
             const w = crestW(n.role);
             return (
