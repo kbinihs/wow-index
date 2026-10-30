@@ -3,14 +3,16 @@ import { buildPilotRecord, LABEL_MAX, pilotFileName } from '../pilot';
 import { encode } from '../codec';
 import { loadProgress, summaryOf } from '../progress';
 import { resultHash } from '../router';
-import { announce, copyText, downloadText, useFocusHeading } from './common';
+import { copyText, downloadText, useFocusHeading } from './common';
 
-/** 파일럿 참여자가 문항별 응답을 파일로 내보낸다(설계서 8.2의 4). 결과 링크·팀 코드와 따로 쓴다. */
+/** 파일럿 참여자가 문항별 응답을 파일로 내보낸다. 결과 링크·팀 코드와 따로 쓴다. */
 export function Export() {
   const heading = useFocusHeading('export');
   const progress = useMemo(loadProgress, []);
   const [label, setLabel] = useState('');
   const [agree, setAgree] = useState(false);
+  // 내려받기·복사 결과는 화면에도 보여 준다(role=status라 스크린리더도 읽는다)
+  const [status, setStatus] = useState('');
   const textRef = useRef<HTMLTextAreaElement>(null);
   const record = progress ? buildPilotRecord(progress, label) : null;
 
@@ -20,7 +22,7 @@ export function Export() {
         <h1 ref={heading} tabIndex={-1}>
           응답 파일 내보내기
         </h1>
-        <p>내보낼 응답이 없습니다. 테스트를 끝낸 뒤 결과 화면에서 다시 열어 주세요.</p>
+        <p>내보낼 응답이 없습니다. 질문에 모두 답한 뒤 결과 화면에서 다시 열어 주세요.</p>
         <a class="btn btn-secondary" href="#/">
           처음 화면으로
         </a>
@@ -31,7 +33,12 @@ export function Export() {
   const json = JSON.stringify(record, null, 2);
   const save = () => {
     const ok = downloadText(pilotFileName(record), json, 'application/json');
-    announce(ok ? '파일을 내려받았습니다.' : '파일을 내려받지 못했습니다. 아래 파일 내용을 복사해 진행자에게 보내 주세요.');
+    // 내려받기가 실제로 끝났는지는 알 수 없어(메신저 안 브라우저 등) '시작했다'고만 말한다
+    setStatus(
+      ok
+        ? "내려받기를 시작했습니다. 파일이 보이지 않으면 아래 '파일 내용 보기'를 열어 내용을 복사한 뒤 진행자에게 보내 주세요."
+        : "파일을 내려받지 못했습니다. 아래 '파일 내용 보기'를 열어 내용을 복사한 뒤 진행자에게 보내 주세요.",
+    );
   };
 
   return (
@@ -41,9 +48,9 @@ export function Export() {
       </h1>
       <p class="lead">파일럿 참여자만 쓰는 화면입니다. 문항을 다듬는 데 쓰도록 내 응답 원본을 파일로 만듭니다. 만든 파일은 진행자에게 직접 보내 주세요.</p>
       <ul class="facts">
-        <li>담기는 것: 문항별 답, 문항과 선택지가 나온 순서, 단계별로 걸린 시간, 결과 유형</li>
-        <li>담기지 않는 것: 이름, 연락처, 팀 코드에 적은 별명</li>
-        <li>파일은 이 기기에만 저장되고, 저절로 보내지지 않습니다.</li>
+        <li>담기는 것: 문항별 응답, 문항과 선택지가 나온 순서, 단계별로 걸린 시간, 결과 유형</li>
+        <li>담기지 않는 것: 이름, 연락처, 결과 화면에서 적은 별명</li>
+        <li>파일은 이 기기에만 저장되며 어디로도 자동으로 보내지지 않습니다.</li>
       </ul>
 
       <div class="card">
@@ -61,6 +68,9 @@ export function Export() {
             파일 내려받기
           </button>
         </div>
+        <p class="hint" role="status">
+          {status}
+        </p>
         {agree && (
           <details class="table-view">
             <summary>파일 내용 보기(내려받기가 안 될 때)</summary>
@@ -68,7 +78,7 @@ export function Export() {
             <button
               type="button"
               class="btn btn-secondary btn-small"
-              onClick={async () => announce((await copyText(json, textRef.current)) ? '파일 내용을 복사했습니다.' : '복사하지 못했습니다. 칸의 내용을 직접 복사해 주세요.')}
+              onClick={async () => setStatus((await copyText(json, textRef.current)) ? '파일 내용을 복사했습니다.' : '복사하지 못했습니다. 칸의 내용을 직접 복사해 주세요.')}
             >
               내용 복사
             </button>
@@ -76,7 +86,7 @@ export function Export() {
         )}
       </div>
 
-      <p>
+      <p class="minor-link">
         <a href={resultHash(encode(summaryOf(progress!)!))} class="text-link">
           내 결과로 돌아가기
         </a>

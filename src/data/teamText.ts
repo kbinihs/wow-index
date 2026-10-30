@@ -9,7 +9,7 @@ export const BALANCE_TITLE = '다섯 방식의 균형';
 export const BALANCE_HINT = '꼭짓점이 바깥에 있을수록 그 방식을 주·보조 유형으로 가진 팀원이 많습니다.';
 export const EVEN_NOTE = '점선은 다섯 방식이 똑같이 나뉘었을 때의 모양입니다.';
 export const PHASE_NOTE =
-  '점선은 Boris Cherny가 이 단계의 팀에 필요하다고 본 조합입니다. 한 팀을 관찰하고 쓴 의견이라 참고로만 보세요.';
+  '점선은 Boris Cherny가 이 단계에 필요하다고 꼽은 방식에 팀원들의 주·보조 자리를 고르게 나눈 모양입니다(약간 필요한 방식은 절반). 비율은 이 도구가 정했고, 원글도 검증된 기준이 아닌 개인 의견이니 참고로만 보세요.';
 export const BALANCE_EVEN = '다섯 방식이 고르게 들어 있습니다.';
 export const BALANCE_MOST = '많은 쪽';
 export const BALANCE_LEAST = '적은 쪽';
@@ -27,7 +27,7 @@ export const phaseLegend = (id: PhaseId) => `${PHASE_TEXT[id].label}에 필요�
 export const GAP_LABELS = {
   need: '이 단계에 필요한 방식',
   some: '약간 필요한 방식',
-  fewest: '그중 가장 적은 방식',
+  fewest: '필요한데 가장 적은 방식',
   outside: '이 단계 조합 밖의 방식',
 } as const;
 

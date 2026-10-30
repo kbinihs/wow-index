@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { decode, encode, NICK_MAX } from '../src/codec';
+import { decode, encode, extractCode, NICK_MAX } from '../src/codec';
 import { EX1, makeSummary, pairs, sums } from './fixtures';
 
 const rawCode = (obj: unknown) =>
@@ -86,7 +86,24 @@ describe('버전', () => {
     expect(decode(rawCode({ ...validPayload(), v: 3 }))).toEqual({ ok: false, error: 'old-version' });
   });
 
+  it('v4(응답 척도를 맡고 싶음으로 바꾸기 전 문항)도 이전 버전', () => {
+    expect(decode(rawCode({ ...validPayload(), v: 4 }))).toEqual({ ok: false, error: 'old-version' });
+  });
+
   it('더 새 버전은 따로 알린다', () => {
-    expect(decode(rawCode({ ...validPayload(), v: 5 }))).toEqual({ ok: false, error: 'unsupported-version' });
+    expect(decode(rawCode({ ...validPayload(), v: 6 }))).toEqual({ ok: false, error: 'unsupported-version' });
+  });
+});
+
+describe('붙여 넣은 글에서 코드만 꺼내기', () => {
+  const code = encode(EX1, '가나');
+  it('결과 링크, 메신저에서 복사한 줄, 코드만', () => {
+    expect(extractCode(`https://example.org/index.html#/result/${code}`)).toBe(code);
+    expect(extractCode(`[홍길동] [오후 3:12] ${code}`)).toBe(code);
+    expect(extractCode(`홍길동: ${code}`)).toBe(code);
+    expect(extractCode(`  ${code}  `)).toBe(code);
+  });
+  it('코드가 아니면 그대로 넘겨 오류 안내를 받게 한다', () => {
+    expect(extractCode(' abc$ ')).toBe('abc$');
   });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ITEMS } from '../src/data/items';
+import { A_GUIDE, ITEMS, LIKERT_LABELS } from '../src/data/items';
 import { SCENARIOS } from '../src/data/scenarios';
 import { ARCHETYPES } from '../src/types';
 
@@ -16,6 +16,11 @@ describe('문항 설계', () => {
     expect(new Set(ITEMS.map((i) => i.text)).size).toBe(ITEMS.length);
     const roles = SCENARIOS.flatMap((sc) => Object.values(sc.roles));
     expect(new Set(roles).size).toBe(roles.length);
+  });
+
+  it('업무 선호도 상황 선택과 같은 말(맡고 싶음)로 묻는다', () => {
+    expect([A_GUIDE, ...LIKERT_LABELS].join(' ')).not.toMatch(/끌리|끌림/);
+    expect(A_GUIDE).toContain('얼마나 맡고 싶은지');
   });
 
   it('덜어 내는 Sweeper와 키우는 Grower가 서로의 말을 쓰지 않는다', () => {

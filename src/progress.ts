@@ -21,6 +21,7 @@ export const STEPS: readonly Step[] = [
 export type RoleChoice = { best: Archetype | null; worst: Archetype | null };
 
 export interface Progress {
+  /** 저장 형식 버전. 문항 문구가 바뀔 때는 이 값이 아니라 KEY를 올린다. */
   v: 3;
   seed: number;
   /** A 표시 순서(문항 ID) */
@@ -38,8 +39,11 @@ export interface Progress {
   finishedAt: string | null;
 }
 
-// v4: 문항 문구가 바뀌어 이전 진행 기록은 이어 쓰지 않는다
-const KEY = 'wa:progress:v4';
+// v5: 응답 척도(끌림 → 맡고 싶음)와 문항·상황 문구가 바뀌어 이전 진행 기록은 이어 쓰지 않는다.
+// 기록의 v는 저장 형식 버전, KEY는 문항 문구 버전이다.
+const KEY = 'wa:progress:v5';
+/** 이전 버전이 남긴 기록. '내 응답 지우기'와 '다시 하기'에서 함께 지운다. */
+const LEGACY_KEYS = ['wa:progress:v3', 'wa:progress:v4'];
 
 function randomSeed(): number {
   try {
@@ -146,4 +150,5 @@ export function saveProgress(p: Progress): void {
 
 export function clearProgress(): void {
   removeItem(KEY);
+  for (const k of LEGACY_KEYS) removeItem(k);
 }

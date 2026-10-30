@@ -34,7 +34,7 @@ export function PartA({
   return (
     <>
       <p class="guide">
-        <Emph text={A_GUIDE} bold={['이 일을 맡는다면 얼마나 끌리는지']} />
+        <Emph text={A_GUIDE} bold={['이 일을 얼마나 맡고 싶은지']} />
       </p>
       {ids.map((id, i) => (
         <fieldset

@@ -1,5 +1,5 @@
-import { decode, type DecodeError } from './codec';
-import { bCounts, place, SCENARIO_COUNT } from './scoring';
+import { decode, extractCode, type DecodeError } from './codec';
+import { bCounts, place } from './scoring';
 import { ARCHETYPES, type Archetype, type Summary } from './types';
 
 export interface Member {
@@ -11,28 +11,28 @@ export interface Member {
 
 export interface ParsedTeam {
   members: Member[];
-  errors: { line: number; error: DecodeError }[];
+  /** 읽지 못한 줄. text는 그 줄의 앞부분(14자가 넘으면 줄임) */
+  errors: { line: number; error: DecodeError; text: string }[];
   /** 앞서 나온 코드와 똑같아서 뺀 줄 */
   duplicates: number[];
 }
 
-/** 한 줄에 하나. 결과 링크 전체를 붙여 넣어도 코드 부분만 읽는다. */
+/** 한 줄에 하나. 결과 링크나 메신저에서 복사한 줄을 붙여 넣어도 코드 부분만 읽는다. */
 export function parseTeamCodes(text: string): ParsedTeam {
   const out: ParsedTeam = { members: [], errors: [], duplicates: [] };
   const seen = new Set<string>();
   text.split(/\r?\n/).forEach((raw, i) => {
     const line = i + 1;
-    let code = raw.trim();
-    if (!code) return;
-    const m = code.match(/#\/result\/([^\s?#]+)/);
-    if (m) code = m[1];
+    const trimmed = raw.trim();
+    if (!trimmed) return;
+    const code = extractCode(trimmed);
     if (seen.has(code)) {
       out.duplicates.push(line);
       return;
     }
     const r = decode(code);
     if (!r.ok) {
-      out.errors.push({ line, error: r.error });
+      out.errors.push({ line, error: r.error, text: trimmed.length > 14 ? `${trimmed.slice(0, 14)}…` : trimmed });
       return;
     }
     seen.add(code);
@@ -41,28 +41,7 @@ export function parseTeamCodes(text: string): ParsedTeam {
   return out;
 }
 
-// ── 7.3.5 상황별 선택 분포 ─────────────────────────────
-
-export interface ScenarioPicks {
-  /** 원형별로 그 역할을 고른 멤버 순번 */
-  best: Record<Archetype, number[]>;
-  worst: Record<Archetype, number[]>;
-}
-
-export function scenarioDistribution(members: readonly Member[]): ScenarioPicks[] {
-  const empty = () => Object.fromEntries(ARCHETYPES.map((a) => [a, [] as number[]])) as Record<Archetype, number[]>;
-  return Array.from({ length: SCENARIO_COUNT }, (_, si) => {
-    const picks: ScenarioPicks = { best: empty(), worst: empty() };
-    members.forEach((m, mi) => {
-      const c = m.summary.b[si];
-      picks.best[c.best].push(mi);
-      picks.worst[c.worst].push(mi);
-    });
-    return picks;
-  });
-}
-
-// ── 7.3.6 유형 분포(순위 없음) ─────────────────────────
+// ── 유형 분포(순위 없음) ───────────────────────────────
 
 export interface MemberType {
   core: Archetype;
@@ -91,7 +70,7 @@ export function typeDistribution(members: readonly Member[]): {
 
 // ── 표시 이름 ──────────────────────────────────────────
 
-/** 별명이 없거나 이름 숨기기를 켜면 '팀원 n' */
+/** 별명이 없거나 별명 숨기기를 켜면 '팀원 n' */
 export function displayName(m: Member, index: number, hide: boolean): string {
   return !hide && m.nick ? m.nick : `팀원 ${index + 1}`;
 }
@@ -145,8 +124,8 @@ export type PhaseId = 'new' | 'growing' | 'mature';
 export type Need = 'core' | 'some';
 
 /**
- * 원글: pre-PMF 1+2+3 / PMF를 찾고 크는 중 2+3+4, 5 약간 / PMF가 확실 3+4+5, 2 약간.
- * 한 팀을 관찰한 의견이라 화면에서는 참고용으로만 보여 준다.
+ * 원글: pre-PMF 1+2+3 / growing 2+3+4, 5 약간 / strong PMF 3+4+5, 2 약간.
+ * 비율(필요 1, 약간 0.5)은 이 도구가 정했다. 검증된 기준이 아니라 화면에서는 참고용으로만 보여 준다.
  */
 export const PHASES: readonly { id: PhaseId; need: Partial<Record<Archetype, Need>> }[] = [
   { id: 'new', need: { P: 'core', B: 'core', S: 'core' } },

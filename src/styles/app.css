@@ -101,12 +101,17 @@ a {
 
 /* ── 틀 ───────────────────────────────────────────── */
 
+/* 넓은 화면에서도 머리줄 글자가 가운데 단(608px 글자 폭)의 왼쪽 끝과 맞도록 */
 .site-header {
   background: var(--surface);
   border-bottom: 1px solid var(--border);
-  padding: 10px max(16px, env(safe-area-inset-left, 0px));
+  padding: 0 max(16px, env(safe-area-inset-right, 0px), calc((100% - 608px) / 2)) 0
+    max(16px, env(safe-area-inset-left, 0px), calc((100% - 608px) / 2));
 }
 .site-title {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   color: var(--text);
   text-decoration: none;
   font-size: 1.15rem;
@@ -180,6 +185,23 @@ a {
   width: 250px;
   height: 250px;
   pointer-events: none;
+}
+/* 원호를 가운데 단(640px)의 가장자리가 아니라 화면 오른쪽 끝에 붙인다(넓은 화면에서 잘리지 않게) */
+.start .hero {
+  position: static;
+}
+@media (min-width: 720px) {
+  .horizon {
+    width: 340px;
+    height: 340px;
+  }
+}
+/* 아주 좁은 화면에서는 원호가 'WAYS OF WORKING' 글자를 덮지 않게 줄인다 */
+@media (max-width: 359px) {
+  .horizon {
+    width: 190px;
+    height: 190px;
+  }
 }
 .horizon-arc {
   fill: none;
@@ -266,6 +288,12 @@ a {
 .btn-danger {
   background: var(--danger);
   color: var(--danger-ink);
+}
+/* 되돌릴 수 없는 일의 첫 단추. 확인 단계의 '지우기'만 꽉 찬 빨강으로 둔다 */
+.btn-danger-quiet {
+  background: transparent;
+  color: var(--danger);
+  border-color: var(--danger);
 }
 .btn:disabled {
   background: var(--surface-2);
@@ -656,6 +684,17 @@ fieldset.question legend {
 }
 .step-nav .btn {
   flex: 1;
+  white-space: nowrap;
+  padding-inline: 12px;
+}
+/* 가로 화면이나 크게 확대한 화면에서는 아래 막대가 화면을 덮지 않게 고정을 푼다 */
+@media (max-height: 520px) {
+  .dock {
+    position: static;
+  }
+  .nav-hint {
+    display: none;
+  }
 }
 
 /* ── 결과 ─────────────────────────────────────────── */
@@ -847,7 +886,8 @@ fieldset.question legend {
   padding: 0;
   margin: 0 0 12px;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  /* 네 단계가 3+1로 갈라지지 않게 늘 2×2 */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
 .phase-pick legend {
@@ -1011,9 +1051,14 @@ textarea {
   cursor: pointer;
 }
 .toggle input {
+  flex: none;
   width: 20px;
   height: 20px;
   accent-color: var(--orange-ui);
+}
+/* 'Grower(주 1명 · 보조 1명)'처럼 괄호 안에서 줄이 바뀌면 안 되는 덩어리 */
+.nowrap {
+  white-space: nowrap;
 }
 .member-list,
 .composition {
@@ -1109,6 +1154,9 @@ textarea {
 /* ── 파일럿 내보내기·분석 ─────────────────────────── */
 
 .text-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   color: var(--text);
   font-weight: 500;
   text-underline-offset: 3px;
@@ -1124,7 +1172,7 @@ textarea {
 .table-view summary {
   cursor: pointer;
   font-weight: 500;
-  min-height: 32px;
+  padding-block: 12px;
 }
 .table-view textarea {
   margin: 8px 0;
@@ -1385,6 +1433,10 @@ input[type='file'] {
   }
   .card {
     break-inside: avoid;
+  }
+  /* 종이에는 보낼 링크·코드가 없으므로 공유 카드 전체를 뺀다 */
+  section[aria-labelledby='sec-share'] {
+    display: none !important;
   }
   * {
     animation: none !important;

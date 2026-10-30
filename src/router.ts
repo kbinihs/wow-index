@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'preact/hooks';
 
+export { extractCode } from './codec';
+
 export type Route =
   | { name: 'start' }
   | { name: 'test' }
@@ -20,12 +22,6 @@ export function parseHash(hash: string): Route {
 }
 
 export const resultHash = (code: string) => `#/result/${code}`;
-
-/** 링크나 코드를 붙여 넣었을 때 코드 부분만 */
-export function extractCode(input: string): string {
-  const m = input.match(/#\/result\/([^\s?#]+)/);
-  return (m ? m[1] : input).trim();
-}
 
 export function navigate(hash: string, replace = false): void {
   if (replace) window.location.replace(hash);

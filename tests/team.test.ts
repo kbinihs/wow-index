@@ -9,7 +9,6 @@ import {
   phaseGaps,
   referenceShape,
   parseTeamCodes,
-  scenarioDistribution,
   totals,
   typeDistribution,
   type Member,
@@ -24,8 +23,20 @@ describe('팀 코드 붙여 넣기', () => {
     const r = parseTeamCodes(text);
     expect(r.members.map((m) => m.nick)).toEqual(['가나', null]);
     expect(r.members[0].summary).toEqual(EX1);
-    expect(r.errors).toEqual([{ line: 3, error: 'malformed' }]);
+    expect(r.errors).toEqual([{ line: 3, error: 'malformed', text: 'not-a-code!' }]);
     expect(r.duplicates).toEqual([5]);
+  });
+
+  it('메신저에서 복사한 줄(이름·시각이 앞에 붙은 줄)에서도 코드만 읽는다', () => {
+    const a = encode(EX1, '가나');
+    const b = encode(makeSummary());
+    const r = parseTeamCodes([`[홍길동] [오후 3:12] ${a}`, `홍길동: ${b}`].join('\n'));
+    expect(r.members.map((m) => m.nick)).toEqual(['가나', null]);
+    expect(r.errors).toEqual([]);
+  });
+
+  it('읽지 못한 줄은 앞부분을 보여 줄 수 있게 남긴다(길면 줄임)', () => {
+    expect(parseTeamCodes('x'.repeat(30)).errors).toEqual([{ line: 1, error: 'malformed', text: `${'x'.repeat(14)}…` }]);
   });
 });
 
@@ -35,13 +46,6 @@ describe('분포', () => {
     { nick: 'b', summary: makeSummary({ aSum: sums(3, 3, 3, 3, 3), b: pairs('MP', 'MP', 'MP', 'BS', 'GB', 'GS'), picks: { core: 'M', second: 'G' } }) },
     { nick: 'c', summary: makeSummary({ aSum: sums(2, 4.5, 2, 2, 4), b: pairs('BM', 'BS', 'SG', 'GM', 'MP', 'PB') }) },
   ];
-
-  it('상황마다 누가 어떤 역할을 골랐는지', () => {
-    const dist = scenarioDistribution(ms);
-    expect(dist).toHaveLength(6);
-    expect(dist[0].best).toEqual({ P: [0], B: [2], S: [], G: [], M: [1] });
-    expect(dist[0].worst).toEqual({ P: [1], B: [], S: [], G: [], M: [0, 2] });
-  });
 
   it('팀원별 주·보조 유형과 원형별 사람 수(순위 없음)', () => {
     const d = typeDistribution(ms);
@@ -98,7 +102,7 @@ describe('사업 단계별 조합(원글)', () => {
     expect(referenceShape(7, 'mature')).toEqual({ P: 0, B: 2, S: 4, G: 4, M: 4 });
   });
 
-  it('필요한 방식, 그중 가장 적은 방식, 조합 밖의 방식', () => {
+  it('필요한 방식, 필요한데 가장 적은 방식, 조합 밖의 방식', () => {
     expect(phaseGaps({ P: 4, B: 3, S: 2, G: 2, M: 3 }, 'mature')).toEqual({
       need: ['S', 'G', 'M'],
       some: ['B'],

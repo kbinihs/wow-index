@@ -6,8 +6,8 @@ import { ARCHETYPES, type Archetype, type Picks, type Summary } from './types';
  * 담는 것: 버전, 별명(선택), A 평균 5개, B 상황별 best/worst, 동점일 때 본인이 고른 것.
  * A 문항별 응답은 넣지 않는다.
  */
-/** v4: 원글(Boris Cherny) 정의에 맞춰 문항을 고침. v3 이하 코드는 문항 뜻이 달라 열지 않는다. */
-export const CODE_VERSION = 4;
+/** v5: 응답 척도(끌림 → 맡고 싶음)와 문항·상황 문구를 고침. v4 이하 코드는 문항 뜻이 달라 열지 않는다. */
+export const CODE_VERSION = 5;
 export const NICK_MAX = 20;
 
 interface Payload {
@@ -28,11 +28,12 @@ export type DecodeResult =
   | { ok: false; error: DecodeError };
 
 export const DECODE_ERROR_TEXT: Record<DecodeError, string> = {
-  empty: '코드가 비어 있습니다.',
+  empty: '팀 코드나 결과 링크를 넣어 주세요.',
   malformed: '코드를 읽을 수 없습니다. 복사할 때 빠진 글자가 없는지 확인해 주세요.',
-  'old-version': '이전 버전에서 만든 코드입니다. 문항과 계산 방식이 바뀌어 이 버전에서는 열 수 없습니다. 테스트를 다시 해 주세요.',
-  'unsupported-version': '이 화면보다 새 버전에서 만든 코드입니다. 최신 버전에서 열어 주세요.',
-  invalid: '코드 안의 값이 올바르지 않습니다.',
+  'old-version':
+    '이전 버전에서 만든 코드라 열 수 없습니다. 문항이나 계산 방식이 바뀌어, 코드를 만든 사람이 질문에 다시 답해 새 코드를 만들어야 합니다.',
+  'unsupported-version': '이 페이지보다 새 버전에서 만든 코드입니다. 페이지를 새로 고친 뒤 다시 열어 주세요.',
+  invalid: '코드 안의 값이 올바르지 않습니다. 코드가 바뀌거나 잘리지 않았는지 확인해 주세요.',
 };
 
 function toBase64Url(bytes: Uint8Array): string {
@@ -97,6 +98,17 @@ function toSummary(p: Record<string, unknown>): Summary | null {
   // 받은 코드만으로 주·보조 유형이 정해져야 한다
   if (place(summary.aSum, bCounts(summary.b).best, picks).pending) return null;
   return summary;
+}
+
+/**
+ * 붙여 넣은 글에서 코드 부분만. 결과 링크, 메신저에서 복사한 줄('[이름] [오후 3:12] 코드', '이름: 코드')도 받는다.
+ * 코드는 늘 '{"v'의 base64인 'eyJ'로 시작한다.
+ */
+export function extractCode(input: string): string {
+  const link = input.match(/#\/result\/([^\s?#]+)/);
+  if (link) return link[1];
+  const token = input.match(/eyJ[A-Za-z0-9_-]{16,}/);
+  return (token ? token[0] : input).trim();
 }
 
 export function decode(input: string): DecodeResult {

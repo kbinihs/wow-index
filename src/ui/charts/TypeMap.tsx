@@ -10,7 +10,7 @@ export const ROLE_LABEL: Record<Role, string> = {
   core: '주 유형',
   second: '보조 유형',
   growth: '성장 방향',
-  partner: '필요한 짝',
+  partner: '채워 줄 짝',
 };
 
 function roleOf(p: Placement, a: Archetype): Role {
@@ -27,15 +27,18 @@ function roleOf(p: Placement, a: Archetype): Role {
 export function TypeMap({ placement }: { placement: Placement }) {
   const [ref, width] = useWidth<HTMLDivElement>();
   const R = Math.max(70, Math.min(width / 2 - 56, 112));
+  /** 좁은 화면에서는 문양을 줄여 점 사이 선이 너무 짧아지지 않게 한다 */
+  const k = Math.min(1, R / 100);
   const cx = width / 2;
-  const cy = R + 40;
+  /** 맨 위 점 위에 이름 두 줄이 들어갈 자리 */
+  const cy = R + 80;
   const height = Math.round(cy + R * 0.81 + 80);
   const pos = (i: number) => {
     const t = ((-90 + i * 72) * Math.PI) / 180;
     return { x: cx + R * Math.cos(t), y: cy + R * Math.sin(t) };
   };
   /** 문양 너비. 높이는 1.2배 */
-  const crestW = (role: Role) => (role === 'core' ? 54 : 40);
+  const crestW = (role: Role) => Math.round((role === 'core' ? 54 : 40) * k);
   const radius = (role: Role) => crestW(role) * 0.6;
   const nodes = ARCHETYPES.map((a, i) => ({ a, role: roleOf(placement, a), ...pos(i), i }));
   const core = nodes.find((n) => n.role === 'core')!;
@@ -53,7 +56,7 @@ export function TypeMap({ placement }: { placement: Placement }) {
     `주 유형 ${NAMES[placement.core!]}`,
     `보조 유형 ${NAMES[placement.second!]}`,
     `성장 방향 ${placement.growth.map((a) => NAMES[a]).join(', ')}`,
-    placement.partners.length ? `필요한 짝 ${placement.partners.map((a) => NAMES[a]).join(', ')}` : '필요한 짝 뚜렷하지 않음',
+    placement.partners.length ? `채워 줄 짝 ${placement.partners.map((a) => NAMES[a]).join(', ')}` : '채워 줄 짝 뚜렷하지 않음',
   ].join(', ');
 
   return (
@@ -73,19 +76,21 @@ export function TypeMap({ placement }: { placement: Placement }) {
             ))}
           {nodes.map((n) => {
             const r = radius(n.role);
-            // 맨 위 점은 오른쪽에, 나머지는 아래에 이름을 단다
-            const top = n.i === 0;
-            const lx = top ? n.x + r + (n.role === 'core' ? 16 : 8) : n.x;
-            const ly = top ? n.y - 4 : n.y + r + 17;
+            // 팀 오각형과 같은 규칙: 위쪽 세 점(P·B·M)은 문양 위에, 아래쪽 두 점(S·G)은 문양 아래에 이름을 단다.
+            // 그래야 선이 이름을 가로지르지 않는다. 주 유형은 테두리 원만큼 더 띄운다.
+            const halo = n.role === 'core' ? 8 : 0;
+            const below = n.i === 2 || n.i === 3;
+            const lx = n.x;
+            const ly = below ? n.y + r + halo + 17 : n.y - r - halo - 22;
             const w = crestW(n.role);
             return (
               <g key={n.a} class={`map-node-${n.role}`}>
                 {n.role === 'core' && <circle class="map-halo" cx={n.x} cy={n.y} r={r + 8} />}
                 <Crest archetype={n.a} size={w} x={n.x - w / 2} y={n.y - w * 0.6} title={`${NAMES[n.a]}, ${ROLE_LABEL[n.role]}`} />
-                <text class="map-name" x={lx} y={ly} text-anchor={top ? 'start' : 'middle'}>
+                <text class="map-name" x={lx} y={ly} text-anchor="middle">
                   {NAMES[n.a]}
                 </text>
-                <text class="map-role" x={lx} y={ly + 16} text-anchor={top ? 'start' : 'middle'}>
+                <text class="map-role" x={lx} y={ly + 16} text-anchor="middle">
                   {ROLE_LABEL[n.role]}
                 </text>
               </g>
@@ -101,7 +106,7 @@ export function TypeMap({ placement }: { placement: Placement }) {
           <span class="legend-line legend-growth" /> 성장 방향
         </li>
         <li>
-          <span class="legend-line legend-partner" /> 필요한 짝
+          <span class="legend-line legend-partner" /> 채워 줄 짝
         </li>
       </ul>
     </figure>

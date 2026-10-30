@@ -1,4 +1,4 @@
-import { NAMES } from '../data/profiles';
+import { useId } from 'preact/hooks';
 import type { Archetype } from '../types';
 
 /**
@@ -89,13 +89,14 @@ export function Crest({
   archetype: Archetype;
   size?: number;
   animate?: boolean;
+  /** 있으면 그림으로 읽히고, 없으면 바로 옆에 이름이 있으므로 스크린리더에서 숨긴다 */
   title?: string;
   /** 다른 SVG 안에 넣을 때의 위치 */
   x?: number;
   y?: number;
 }) {
-  const id = `crest-clip-${archetype}`;
-  const label = title ?? `${NAMES[archetype]} 문양`;
+  // 한 화면에 같은 문양이 여러 번 나와도 id가 겹치지 않게 한다
+  const id = `crest-clip-${archetype}-${useId()}`;
   return (
     <svg
       class={`crest crest-${archetype}${animate ? ' crest-animate' : ''}`}
@@ -104,8 +105,10 @@ export function Crest({
       x={x}
       y={y}
       viewBox="0 0 100 120"
-      role="img"
-      aria-label={label}
+      role={title ? 'img' : undefined}
+      aria-label={title}
+      aria-hidden={title ? undefined : 'true'}
+      focusable="false"
     >
       <defs>
         <clipPath id={id}>

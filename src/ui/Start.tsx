@@ -47,7 +47,7 @@ export function Start() {
           <Wordmark />
         </h1>
         <p class="hero-sub">나는 어떻게 일하고 있나</p>
-        <ul class="hero-crests" aria-label="다섯 가지 유형">
+        <ul class="hero-crests" aria-label="다섯 가지 업무 방식">
           {ARCHETYPES.map((a, i) => (
             <li key={a} style={{ '--i': i } as Record<string, number>}>
               <Crest archetype={a} size={48} animate />
@@ -57,11 +57,11 @@ export function Start() {
         </ul>
       </section>
       <p class="lead">
-        질문에 답하면 내가 어떤 방식으로 일하는 사람인지 다섯 가지 유형으로 보여 줍니다.
+        질문에 답하면 다섯 가지 업무 방식 가운데 내가 주로 선택하는 두 가지를 주 유형과 보조 유형으로 보여 줍니다.
       </p>
       <ul class="facts">
-        <li>질문 32개, 5분 정도 걸립니다.</li>
-        <li>답은 이 브라우저 안에서만 처리하고 서버로 보내지 않습니다.</li>
+        <li>문항 20개와 상황 6개, 5분 정도 걸립니다.</li>
+        <li>응답은 이 브라우저 안에서만 처리하고 서버로 보내지 않습니다.</li>
         <li>중간에 창을 닫아도 이 브라우저에 저장되어 이어서 할 수 있습니다.</li>
       </ul>
 
@@ -92,7 +92,11 @@ export function Start() {
       </div>
       {confirmRestart && (
         <div class="confirm" role="group" aria-label="다시 하기 확인">
-          <p>이 브라우저에 저장된 응답을 지우고 처음부터 시작합니다.</p>
+          <p>
+            {finished
+              ? '이 브라우저에 저장된 응답과 결과를 지우고 처음부터 시작합니다. 지금 결과를 남기려면 먼저 결과 화면에서 팀 코드를 복사해 두세요.'
+              : '이 브라우저에 저장된 응답을 지우고 처음부터 시작합니다.'}
+          </p>
           <button type="button" class="btn btn-danger" onClick={begin}>
             지우고 시작하기
           </button>
@@ -104,7 +108,7 @@ export function Start() {
 
       <form class="card code-form" onSubmit={openCode}>
         <h2>받은 결과 보기</h2>
-        <label for="code-input">결과 코드나 결과 링크</label>
+        <label for="code-input">팀 코드나 결과 링크</label>
         <input
           id="code-input"
           value={codeInput}
@@ -126,7 +130,7 @@ export function Start() {
 
       <section class="card team-entry">
         <h2>팀 결과 모아 보기</h2>
-        <p>팀원들의 팀 코드를 모아 우리 팀 구성을 봅니다. 이번 분기 팀 업무와 나란히 놓고 볼 수 있습니다.</p>
+        <p>팀원들이 보낸 팀 코드를 모아 우리 팀에 다섯 방식이 어떻게 섞여 있는지 봅니다. 팀이 맡은 사업의 단계에 필요한 조합과 비교해 볼 수도 있습니다.</p>
         <a class="btn btn-secondary" href="#/team">
           팀 화면 열기
         </a>

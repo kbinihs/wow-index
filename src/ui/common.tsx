@@ -1,7 +1,7 @@
 import type { ComponentChildren } from 'preact';
 import { useEffect, useRef } from 'preact/hooks';
 
-/** 설계서 문장 안에서 강조한 부분만 <strong>으로 감싼다 */
+/** 문장 안에서 강조할 부분만 <strong>으로 감싼다 */
 export function Emph({ text, bold }: { text: string; bold: readonly string[] }) {
   const parts: ComponentChildren[] = [];
   let rest = text;

@@ -1,4 +1,5 @@
-import { useRoute } from '../router';
+import { useEffect } from 'preact/hooks';
+import { useRoute, type Route } from '../router';
 import { Result } from './Result';
 import { Start } from './Start';
 import { Test } from './Test';
@@ -7,8 +8,22 @@ import { Team } from './Team';
 import { Export } from './Export';
 import { Analysis } from './Analysis';
 
+/** 탭·방문 기록·스크린리더가 지금 화면을 알 수 있게 페이지 제목을 바꾼다 */
+const TITLES: Record<Route['name'], string> = {
+  start: '',
+  test: '질문에 답하기',
+  result: '결과',
+  team: '우리 팀 구성',
+  export: '응답 파일 내보내기',
+  analysis: '파일럿 응답 분석',
+};
+
 export function App() {
   const route = useRoute();
+  useEffect(() => {
+    const t = TITLES[route.name];
+    document.title = t ? `${t} · WoW Index` : 'WoW Index';
+  }, [route.name]);
   return (
     <>
       <a class="skip-link" href="#main-content" onClick={(e) => {

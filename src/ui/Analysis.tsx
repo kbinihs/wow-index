@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'preact/hooks';
 import { ITEMS } from '../data/items';
 import { NAMES } from '../data/profiles';
-import { coreCounts, itemAnalysis, median, parsePilotText, scenarioCounts, toCsv, type PilotRecord } from '../pilot';
+import { abAgreement, coreCounts, itemAnalysis, median, parsePilotText, recordKey, scenarioCounts, toCsv, type PilotRecord } from '../pilot';
 import { ARCHETYPES } from '../types';
 import { announce, copyText, downloadText, Section, useFocusHeading } from './common';
 import { Crest } from './Crest';
@@ -13,8 +13,10 @@ const LOW_REST = 0.3;
 const fmt = (x: number | null, digits = 2) => (x === null ? '–' : x.toFixed(digits));
 function minutes(sec: number | null): string {
   if (sec === null) return '–';
-  const m = Math.floor(sec / 60);
-  const s = Math.round(sec % 60);
+  // 참여자 수가 짝수면 중앙값이 .5로 끝날 수 있어 먼저 반올림한다('1분 60초' 방지)
+  const t = Math.round(sec);
+  const m = Math.floor(t / 60);
+  const s = t % 60;
   return m ? `${m}분 ${s}초` : `${s}초`;
 }
 
@@ -22,21 +24,46 @@ function minutes(sec: number | null): string {
 export function Analysis() {
   const heading = useFocusHeading('analysis');
   const [records, setRecords] = useState<PilotRecord[]>([]);
+  /** 연달아 파일을 골라도 중복을 바로 가릴 수 있게 지금 목록을 따로 들고 있는다 */
+  const recordsRef = useRef<PilotRecord[]>([]);
   const [bad, setBad] = useState(0);
+  const [old, setOld] = useState(0);
+  const [dup, setDup] = useState(0);
   const [paste, setPaste] = useState('');
+  const [csvStatus, setCsvStatus] = useState('');
   const csvRef = useRef<HTMLTextAreaElement>(null);
 
   const add = (texts: string[]) => {
     let got: PilotRecord[] = [];
     let skipped = 0;
+    let older = 0;
     for (const t of texts) {
       const r = parsePilotText(t);
       got = got.concat(r.records);
       skipped += r.bad;
+      older += r.old;
     }
-    setRecords((rs) => [...rs, ...got]);
+    // 같은 응답(같은 시작 시각·문항 순서)은 한 번만 센다. 다시 내보낸 파일이면 나중 것을 남긴다.
+    const byKey = new Map(recordsRef.current.map((r) => [recordKey(r), r]));
+    let same = 0;
+    for (const r of got) {
+      const k = recordKey(r);
+      const prev = byKey.get(k);
+      if (prev) same++;
+      if (!prev || prev.exportedAt < r.exportedAt) byKey.set(k, r);
+    }
+    const next = [...byKey.values()];
+    recordsRef.current = next;
+    setRecords(next);
     setBad((b) => b + skipped);
-    announce(`응답 ${got.length}개를 읽었습니다.${skipped ? ` 형식이 맞지 않아 뺀 것 ${skipped}개.` : ''}`);
+    setOld((o) => o + older);
+    setDup((d) => d + same);
+    announce(
+      `응답 ${got.length - same}개를 새로 읽었습니다.` +
+        (skipped ? ` 형식이 맞지 않는 ${skipped}개는 뺐습니다.` : '') +
+        (older ? ` 이전 버전 문항으로 만든 ${older}개는 뺐습니다.` : '') +
+        (same ? ` 이미 읽은 응답과 같은 ${same}개는 뺐습니다.` : ''),
+    );
   };
 
   const onFiles = async (e: Event) => {
@@ -47,6 +74,7 @@ export function Analysis() {
 
   const stats = useMemo(() => itemAnalysis(records), [records]);
   const cores = useMemo(() => coreCounts(records), [records]);
+  const ab = useMemo(() => abAgreement(records), [records]);
   const scenarios = useMemo(() => scenarioCounts(records), [records]);
   const csv = useMemo(() => toCsv(records), [records]);
   const times = {
@@ -88,8 +116,12 @@ export function Analysis() {
               type="button"
               class="btn btn-secondary"
               onClick={() => {
+                recordsRef.current = [];
                 setRecords([]);
                 setBad(0);
+                setOld(0);
+                setDup(0);
+                setCsvStatus('');
               }}
             >
               모두 비우기
@@ -97,6 +129,8 @@ export function Analysis() {
           )}
         </div>
         {bad > 0 && <p class="error">형식이 맞지 않아 뺀 것: {bad}개</p>}
+        {old > 0 && <p class="error">이전 버전 문항으로 만든 응답이라 뺀 것: {old}개</p>}
+        {dup > 0 && <p class="hint">이미 읽은 응답과 같아 뺀 것: {dup}개</p>}
       </div>
 
       {records.length > 0 && (
@@ -121,11 +155,20 @@ export function Analysis() {
               <dd>{minutes(times.total)}</dd>
             </dl>
             <p class="hint">걸린 시간은 가운데 값(중앙값)입니다. 화면을 띄워 두고 자리를 비운 시간도 들어갑니다.</p>
+            <p>
+              주 유형과 상황 선택이 맞는 참여자: {ab.match}명 / {ab.n}명
+            </p>
+            <p class="hint">
+              상황 선택에서 '가장 맡고 싶음'으로 가장 많이 고른 방식(여럿이면 그중 하나)이 주 유형과 같으면 맞는 것으로 셉니다. 이 비율이 낮으면 업무 선호와 상황 선택이 서로 다른 것을 재고 있을 수 있습니다.
+            </p>
           </Section>
 
           <Section title="문항 분석" id="sec-items">
             <p class="hint">
               '나머지 문항과의 상관'은 같은 방식의 다른 세 문항과 함께 움직이는 정도입니다. {LOW_REST}보다 낮으면 다른 문항과 따로 움직인다는 뜻이라 문구를 다시 볼 만합니다.
+            </p>
+            <p class="hint">
+              '가장 가까운 다른 방식'은 이 문항이 다른 방식의 네 문항 합과 함께 움직이는 정도 가운데 가장 큰 값입니다. 나머지 문항과의 상관보다 크거나 같으면 '겹침'으로 표시합니다. 이웃 방식과 헷갈리는 문항일 수 있습니다.
             </p>
             {stats.map((s) => (
               <div key={s.archetype} class="item-block">
@@ -142,6 +185,7 @@ export function Analysis() {
                         <th scope="col">평균</th>
                         <th scope="col">표준편차</th>
                         <th scope="col">나머지 문항과의 상관</th>
+                        <th scope="col">가장 가까운 다른 방식</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -155,6 +199,10 @@ export function Analysis() {
                           <td>
                             {fmt(it.rest)}
                             {it.rest !== null && it.rest < LOW_REST && <span class="chip chip-low">낮음</span>}
+                          </td>
+                          <td>
+                            {it.cross ? `${NAMES[it.cross.archetype]} ${fmt(it.cross.r)}` : '–'}
+                            {it.cross && it.rest !== null && it.cross.r >= it.rest && <span class="chip chip-low">겹침</span>}
                           </td>
                         </tr>
                       ))}
@@ -210,19 +258,26 @@ export function Analysis() {
                 type="button"
                 class="btn btn-primary"
                 onClick={() =>
-                  announce(downloadText('wow-index-pilot.csv', csv, 'text/csv') ? 'CSV를 내려받았습니다.' : 'CSV를 내려받지 못했습니다. 아래 내용을 복사해 쓰세요.')
+                  setCsvStatus(
+                    downloadText('wow-index-pilot.csv', csv, 'text/csv')
+                      ? 'CSV 내려받기를 시작했습니다.'
+                      : "CSV를 내려받지 못했습니다. 아래 'CSV 내용 보기'를 열어 내용을 복사해 쓰세요.",
+                  )
                 }
               >
                 CSV 내려받기
               </button>
             </div>
+            <p class="hint" role="status">
+              {csvStatus}
+            </p>
             <details class="table-view">
               <summary>CSV 내용 보기(내려받기가 안 될 때)</summary>
               <textarea ref={csvRef} readOnly rows={6} value={csv} aria-label="CSV 내용" />
               <button
                 type="button"
                 class="btn btn-secondary btn-small"
-                onClick={async () => announce((await copyText(csv, csvRef.current)) ? 'CSV를 복사했습니다.' : '복사하지 못했습니다. 칸의 내용을 직접 복사해 주세요.')}
+                onClick={async () => setCsvStatus((await copyText(csv, csvRef.current)) ? 'CSV를 복사했습니다.' : '복사하지 못했습니다. 칸의 내용을 직접 복사해 주세요.')}
               >
                 내용 복사
               </button>

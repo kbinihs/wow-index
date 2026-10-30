@@ -1,7 +1,7 @@
 import { ITEMS } from './data/items';
 import { ARCHETYPES, type Archetype, type BChoice, type Picks, type Summary } from './types';
 
-/** '차이가 크지 않다'고 보는 평균 간격. 한 문항 두 칸, 또는 두 문항 한 칸씩. */
+/** 평균 간격이 이 값보다 작으면 '차이가 크지 않다'고 본다. 이 값은 한 문항 두 칸, 또는 두 문항 한 칸씩. */
 export const DELTA = 0.5;
 export const ITEMS_PER_ARCHETYPE = 4;
 /** 계산은 원형별 4문항 합계로 해서 부동소수 오차를 피한다. */
@@ -59,7 +59,7 @@ export function bCounts(b: readonly BChoice[]) {
 // ── 자리 정하기 ────────────────────────────────────────
 
 /**
- * 순위 묶음: A 합계가 높은 순 → B '가장 맡고 싶음' 횟수가 많은 순.
+ * 순위 묶음: A 합계가 높은 순. A 합계가 똑같을 때만 B '가장 맡고 싶음' 횟수가 많은 순.
  * 둘 다 같은 원형은 한 묶음(묶음 안은 P·B·S·G·M 순).
  */
 export function rankGroups(aSum: Record<Archetype, number>, best: Record<Archetype, number>): Archetype[][] {
@@ -82,13 +82,13 @@ export interface Placement {
   second: Archetype | null;
   /** 3위: 성장 방향(동점이면 여럿) */
   growth: Archetype[];
-  /** 그 아래: 필요한 짝 */
+  /** 그 아래: 채워 줄 짝 */
   partners: Archetype[];
   /** 본인이 골라야 하는 자리가 있으면 그 자리와 후보 */
   pending: { slot: Slot; candidates: Archetype[] } | null;
 }
 
-/** 1위 주 유형, 2위 보조 유형, 3위 성장 방향, 나머지 필요한 짝 */
+/** 1위 주 유형, 2위 보조 유형, 3위 성장 방향, 나머지 채워 줄 짝 */
 export function place(aSum: Record<Archetype, number>, best: Record<Archetype, number>, picks: Picks): Placement {
   const out: Placement = { core: null, second: null, growth: [], partners: [], pending: null };
   let rest = rankGroups(aSum, best);

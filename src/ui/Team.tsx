@@ -1,3 +1,4 @@
+import { Fragment } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 import { DECODE_ERROR_TEXT } from '../codec';
 import { NAMES, PROFILES, typeName } from '../data/profiles';
@@ -36,11 +37,13 @@ import { TeamPentagon } from './charts/TeamPentagon';
 import { announce, Section, useFocusHeading } from './common';
 import { Crest } from './Crest';
 
-/** 설계서 7장. 붙여 넣은 코드는 이 화면의 메모리에만 있다. */
+/** 팀 화면. 붙여 넣은 코드는 이 화면의 메모리에만 있다. */
 export function Team() {
   const heading = useFocusHeading('team');
   const [input, setInput] = useState('');
   const [parsed, setParsed] = useState<ParsedTeam | null>(null);
+  /** 아무것도 붙여 넣지 않고 불러오기를 눌렀을 때 */
+  const [empty, setEmpty] = useState(false);
   const [hide, setHide] = useState(false);
   const [phase, setPhase] = useState<PhaseId | null>(null);
 
@@ -51,14 +54,28 @@ export function Team() {
   const total = totals(dist.core, dist.second);
   const ext = extremes(total);
   const gaps = phase ? phaseGaps(total, phase) : null;
-  const label = (as: Archetype[]) => as.map((a) => countLabel(a, dist.core[a], dist.second[a])).join(', ');
+  // 'Grower(주 1명 · 보조 1명)'이 괄호 안에서 줄바꿈되지 않게 한 덩어리로 묶는다
+  const label = (as: Archetype[]) =>
+    as.map((a, i) => (
+      <Fragment key={a}>
+        {i > 0 && ', '}
+        <span class="nowrap">{countLabel(a, dist.core[a], dist.second[a])}</span>
+      </Fragment>
+    ));
   const names = (idx: number[]) => (idx.length ? idx.map((i) => displayName(members[i], i, hide)).join(', ') : '없음');
 
   const loadCodes = (e: Event) => {
     e.preventDefault();
     const r = parseTeamCodes(input);
+    if (!r.members.length && !r.errors.length && !r.duplicates.length) {
+      // 빈 입력이면 이미 불러온 팀은 그대로 두고 안내만 한다
+      setEmpty(true);
+      return;
+    }
+    setEmpty(false);
     setParsed(r);
-    announce(`팀원 ${r.members.length}명을 불러왔습니다.`);
+    // 불러온 사람이 없으면 아래 오류 목록(role=alert)이 읽히므로 따로 알리지 않는다
+    if (r.members.length) announce(`팀원 ${r.members.length}명을 불러왔습니다.`);
   };
 
   return (
@@ -69,16 +86,21 @@ export function Team() {
       <p class="lead">{TEAM_INTRO}</p>
 
       <form class="card team-input no-print" onSubmit={loadCodes}>
-        <label for="team-codes">팀 코드 (한 줄에 한 명)</label>
+        <label for="team-codes">팀 코드나 결과 링크(한 줄에 하나씩)</label>
         <textarea id="team-codes" rows={6} value={input} spellcheck={false} onInput={(e) => setInput((e.target as HTMLTextAreaElement).value)} />
         <button type="submit" class="btn btn-primary">
           불러오기
         </button>
+        {empty && (
+          <p class="error" role="alert">
+            팀 코드나 결과 링크를 한 줄에 하나씩 붙여 넣어 주세요.
+          </p>
+        )}
         {parsed && (parsed.errors.length > 0 || parsed.duplicates.length > 0) && (
           <ul class="team-problems" role="alert">
             {parsed.errors.map((e) => (
               <li key={e.line}>
-                {e.line}번째 줄: {DECODE_ERROR_TEXT[e.error]}
+                {e.line}번째 줄({e.text}): {DECODE_ERROR_TEXT[e.error]}
               </li>
             ))}
             {parsed.duplicates.length > 0 && <li>{parsed.duplicates.join(', ')}번째 줄은 앞의 코드와 같아 뺐습니다.</li>}
@@ -91,7 +113,7 @@ export function Team() {
           <Section title={`팀원 ${members.length}명`} id="sec-members">
             <label class="toggle no-print">
               <input type="checkbox" checked={hide} onChange={(e) => setHide((e.target as HTMLInputElement).checked)} />
-              <span>이름 숨기기</span>
+              <span>별명 숨기기</span>
             </label>
             <ul class="member-list">
               {members.map((m, i) => (
@@ -133,16 +155,16 @@ export function Team() {
                   <dt>{GAP_LABELS.need}</dt>
                   <dd>{label(gaps.need)}</dd>
                 </div>
-                {gaps.some.length > 0 && (
-                  <div class="row">
-                    <dt>{GAP_LABELS.some}</dt>
-                    <dd>{label(gaps.some)}</dd>
-                  </div>
-                )}
                 {gaps.fewest.length > 0 && (
                   <div class="row">
                     <dt>{GAP_LABELS.fewest}</dt>
                     <dd>{label(gaps.fewest)}</dd>
+                  </div>
+                )}
+                {gaps.some.length > 0 && (
+                  <div class="row">
+                    <dt>{GAP_LABELS.some}</dt>
+                    <dd>{label(gaps.some)}</dd>
                   </div>
                 )}
                 {gaps.outside.length > 0 && (

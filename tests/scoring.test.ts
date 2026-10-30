@@ -9,8 +9,10 @@ import {
   leadText,
   NAMES,
   PARTNER_LEAD,
+  PARTNER_LEAD_FLAT,
   PARTNER_NONE,
   PARTNER,
+  pickedText,
   pickText,
   PROFILES,
   typeName,
@@ -39,8 +41,11 @@ describe('예시 1(4.7의 A·B)', () => {
     expect(r.flat).toBe(false);
   });
 
-  it('머리 문장은 일 이름으로', () => {
-    expect(leadText('P', 'S')).toBe('새 아이디어를 내고 만들어 보는 일을 가장 많이 선택했고, 그다음은 다듬고 덜어 내는 일이었습니다.');
+  it('머리 문장은 일 이름으로, 횟수 대신 순서로 말한다', () => {
+    expect(leadText('P', 'S')).toBe('선택한 답을 모아 보니 새 아이디어를 내고 만들어 보는 일이 가장 앞섰고, 그다음은 다듬고 덜어 내는 일이었습니다.');
+    expect(leadText('G', 'M')).toBe(
+      '선택한 답을 모아 보니 진행 중인 사업을 반응에 맞춰 키우는 일이 가장 앞섰고, 그다음은 자리 잡은 사업을 튼튼하게 지키는 일이었습니다.',
+    );
   });
 
   it('조합 풀이는 주-보조 순서로 찾는다', () => {
@@ -117,8 +122,15 @@ describe('문구', () => {
   it('동점 고르기 문장', () => {
     expect(pickText(['P', 'B'])).toBe('Prototyper와 Builder의 점수가 같습니다. 둘 중 나와 더 가깝다고 생각하는 쪽을 골라 주세요.');
     expect(pickText(['P', 'B', 'S'])).toBe(
-      'Prototyper, Builder와 Sweeper의 점수가 같습니다. 이 가운데 나와 더 가깝다고 생각하는 쪽을 골라 주세요.',
+      'Prototyper, Builder와 Sweeper의 점수가 같습니다. 이 가운데 나와 가장 가깝다고 생각하는 쪽을 골라 주세요.',
     );
+  });
+
+  it('동점이라 직접 고른 자리 안내', () => {
+    expect(pickedText({})).toBeNull();
+    expect(pickedText({ core: 'B' })).toBe('주 유형은 점수가 같은 방식 가운데 직접 골랐습니다.');
+    expect(pickedText({ second: 'B' })).toBe('보조 유형은 점수가 같은 방식 가운데 직접 골랐습니다.');
+    expect(pickedText({ core: 'S', second: 'B' })).toBe('주 유형과 보조 유형은 점수가 같은 방식 가운데 직접 골랐습니다.');
   });
 
   it('조합 20개, 짝 문구 20칸, 성장 방향 5개, 프로필 5개가 모두 있다', () => {
@@ -149,7 +161,9 @@ describe('문구', () => {
       FLAT_TEXT,
       GROWTH_LEAD,
       PARTNER_LEAD,
+      PARTNER_LEAD_FLAT,
       PARTNER_NONE,
+      pickedText({ core: 'P', second: 'B' })!,
       ...Object.values(COMBOS).flatMap((c) => [c.how, c.caution]),
       ...Object.values(GROWTH),
       ...ARCHETYPES.flatMap((a) => Object.values(PARTNER[a]) as string[]),

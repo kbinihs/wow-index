@@ -1,7 +1,6 @@
-import { B_GUIDE, SCENARIOS } from '../../data/scenarios';
+import { B_GUIDE, B_GUIDE_SHORT, SCENARIOS } from '../../data/scenarios';
 import { tapRole, type RoleChoice as Choice } from '../../progress';
 import type { Archetype } from '../../types';
-import { josa } from '../../text';
 import { announce, Emph } from '../common';
 
 export const BEST_LABEL = '가장 맡고 싶음';
@@ -23,10 +22,11 @@ export function PartB({
   const tap = (a: Archetype) => {
     const next = tapRole(choice, a);
     onChange(next);
-    const role = sc.roles[a];
-    if (next.best === a) announce(`${josa(role, '을', '를')} 가장 맡고 싶은 역할로 골랐습니다.`);
-    else if (next.worst === a) announce(`${josa(role, '을', '를')} 가장 맡고 싶지 않은 역할로 골랐습니다.`);
-    else announce(`${role} 선택을 취소했습니다.`);
+    // 역할 문장은 누른 버튼의 이름으로 이미 읽히므로 바뀐 상태와 다음 할 일만 알린다
+    if (next.best === a)
+      announce(next.worst === null ? '가장 맡고 싶은 역할로 골랐습니다. 이제 가장 맡고 싶지 않은 역할을 고르세요.' : '가장 맡고 싶은 역할로 골랐습니다.');
+    else if (next.worst === a) announce('가장 맡고 싶지 않은 역할로 골랐습니다.');
+    else announce('선택을 취소했습니다.');
   };
 
   const phase = choice.best === null ? 'best' : choice.worst === null ? 'worst' : 'done';
@@ -35,12 +35,12 @@ export function PartB({
       ? '먼저 가장 맡고 싶은 역할을 고르세요.'
       : phase === 'worst'
         ? '이제 가장 맡고 싶지 않은 역할을 고르세요.'
-        : '고른 것을 다시 누르면 바꿀 수 있습니다.';
+        : "고른 역할을 다시 누르면 선택이 취소됩니다. 다른 역할을 누르면 '가장 맡고 싶지 않은 역할'이 그 역할로 바뀝니다.";
 
   return (
     <>
       <p class="guide">
-        <Emph text={B_GUIDE} bold={['내가 가장 맡고 싶은 역할', '가장 맡고 싶지 않은 역할']} />
+        {index === 0 ? <Emph text={B_GUIDE} bold={['내가 가장 맡고 싶은 역할', '가장 맡고 싶지 않은 역할']} /> : B_GUIDE_SHORT}
       </p>
       <p class="situation">
         <span class="situation-id">{sc.id}</span>
@@ -57,7 +57,7 @@ export function PartB({
       <p class="pick-now" id="b-now">
         {now}
       </p>
-      <ul class="roles" aria-describedby="b-now">
+      <ul class="roles">
         {order.map((a) => {
           const state = choice.best === a ? 'best' : choice.worst === a ? 'worst' : null;
           const badge = state === 'best' ? BEST_LABEL : state === 'worst' ? WORST_LABEL : null;
@@ -68,6 +68,7 @@ export function PartB({
                 data-role={a}
                 class={`role${state ? ` role-${state}` : ''}`}
                 aria-label={badge ? `${sc.roles[a]}, ${badge}` : sc.roles[a]}
+                aria-describedby="b-now"
                 onClick={() => tap(a)}
               >
                 <span class="role-text">{sc.roles[a]}</span>

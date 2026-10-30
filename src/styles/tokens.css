@@ -64,8 +64,12 @@
   --crest-ink: var(--wv-midnight);
 }
 
-/* 다크: 시스템 설정을 따르되, 화면에서 테마를 직접 고른 경우(data-theme)가 우선한다 */
-@media (prefers-color-scheme: dark) {
+/*
+ * 다크: 시스템 설정을 따르되, 화면에서 테마를 직접 고른 경우(data-theme)가 우선한다.
+ * 화면(screen)에만 적용한다. :root:not([data-theme='light'])는 :root보다 우선하므로
+ * screen으로 묶지 않으면 아래 인쇄용 밝은 면을 이겨 버린다.
+ */
+@media screen and (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
     color-scheme: dark;
     --bg: var(--wv-midnight);
@@ -89,26 +93,28 @@
   }
 }
 
-:root[data-theme='dark'] {
-  color-scheme: dark;
-  --bg: var(--wv-midnight);
-  --surface: var(--grey-800);
-  --surface-2: var(--grey-700);
-  --text: var(--wv-white);
-  --text-2: var(--field-200);
-  --text-3: var(--field-400);
-  --border: var(--grey-600);
-  --grid: var(--grey-700);
-  --accent-soft: #3d2419;
-  --strong: var(--wv-white);
-  --strong-ink: var(--wv-midnight);
-  --strong-soft: var(--grey-700);
-  --orange-ui: var(--wv-orange);
-  --focus: var(--wv-white);
-  --danger: var(--red-200);
-  --danger-ink: var(--wv-midnight);
-  --banner-bg: #3d2419;
-  --map-line: var(--field-300);
+@media screen {
+  :root[data-theme='dark'] {
+    color-scheme: dark;
+    --bg: var(--wv-midnight);
+    --surface: var(--grey-800);
+    --surface-2: var(--grey-700);
+    --text: var(--wv-white);
+    --text-2: var(--field-200);
+    --text-3: var(--field-400);
+    --border: var(--grey-600);
+    --grid: var(--grey-700);
+    --accent-soft: #3d2419;
+    --strong: var(--wv-white);
+    --strong-ink: var(--wv-midnight);
+    --strong-soft: var(--grey-700);
+    --orange-ui: var(--wv-orange);
+    --focus: var(--wv-white);
+    --danger: var(--red-200);
+    --danger-ink: var(--wv-midnight);
+    --banner-bg: #3d2419;
+    --map-line: var(--field-300);
+  }
 }
 
 /* 인쇄는 항상 밝은 면 */

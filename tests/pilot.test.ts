@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ITEMS } from '../src/data/items';
 import {
+  abAgreement,
   buildPilotRecord,
   coreCounts,
   cronbachAlpha,
@@ -9,6 +10,7 @@ import {
   parsePilotText,
   pearson,
   pilotFileName,
+  recordKey,
   scenarioCounts,
   toCsv,
   type PilotRecord,
@@ -58,9 +60,31 @@ describe('응답 파일 읽기', () => {
   });
 
   it('형식이 다른 것은 세어서 뺀다', () => {
-    expect(parsePilotText(JSON.stringify([r, { kind: 'x' }]))).toEqual({ records: [r], bad: 1 });
-    expect(parsePilotText('not json')).toEqual({ records: [], bad: 1 });
+    expect(parsePilotText(JSON.stringify([r, { kind: 'x' }]))).toEqual({ records: [r], bad: 1, old: 0 });
+    expect(parsePilotText('not json')).toEqual({ records: [], bad: 1, old: 0 });
     expect(parsePilotText(JSON.stringify({ ...r, a: { ...r.a, A01: 9 } })).records).toHaveLength(0);
+  });
+
+  it('이전 버전(문항이 다른) 파일은 따로 센다', () => {
+    expect(parsePilotText(JSON.stringify({ ...r, v: 2 }))).toEqual({ records: [], bad: 0, old: 1 });
+  });
+
+  it('칸이 빠지거나 깨진 파일은 오류 없이 뺀다', () => {
+    const { aOrder: _a, ...noOrder } = r;
+    const broken = [
+      noOrder,
+      { ...r, b: [null, ...r.b.slice(1)] },
+      { ...r, a: null },
+      { ...r, result: null },
+      { ...r, seconds: null },
+      { ...r, seconds: { A: 'x', B: 1, pick: 0 } },
+    ];
+    for (const x of broken) expect(parsePilotText(JSON.stringify(x))).toEqual({ records: [], bad: 1, old: 0 });
+  });
+
+  it('같은 응답을 여러 번 내보낸 파일은 열쇠가 같다', () => {
+    expect(recordKey(r)).toBe(recordKey(s));
+    expect(recordKey(r)).not.toBe(recordKey({ ...r, startedAt: '2026-01-01T00:00:00.000Z' }));
   });
 });
 
@@ -96,6 +120,8 @@ describe('통계', () => {
     expect(stats[0].items[0]).toMatchObject({ id: 'A01', mean: 14 / 3 });
     expect(coreCounts(rs).P).toBe(3);
     expect(scenarioCounts(rs)[0]).toEqual({ id: 'B1', best: { P: 3, B: 0, S: 0, G: 0, M: 0 }, worst: { P: 0, B: 0, S: 0, G: 0, M: 3 } });
+    expect(stats[0].items[0].cross).not.toBeNull();
+    expect(abAgreement(rs)).toEqual({ match: 3, n: 3 });
   });
 });
 
@@ -108,5 +134,10 @@ describe('CSV', () => {
     expect(lines).toHaveLength(2);
     expect(lines[1].startsWith('"P, ""07""",2026-10-30T02:03:04.000Z,P,S,5,5,4,4,')).toBe(true);
     expect(lines[0].split(',')).toHaveLength(4 + 20 + 12 + 4);
+  });
+
+  it('참여 번호가 =, +, -, @로 시작하면 수식으로 읽히지 않게 막는다', () => {
+    const r = buildPilotRecord(finished(), '=1+1', NOW)!;
+    expect(toCsv([r]).trim().split('\n')[1].startsWith("'=1+1,")).toBe(true);
   });
 });

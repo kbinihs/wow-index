@@ -6,7 +6,7 @@ export const pairs = (...codes: string[]): BChoice[] =>
 export const sums = (P: number, B: number, S: number, G: number, M: number) => ({ P: P * 4, B: B * 4, S: S * 4, G: G * 4, M: M * 4 });
 
 /**
- * 4.7 예시 1의 A·B. 설계서에는 집계값만 있어 그 값이 나오는 응답을 구성했다.
+ * 예시 1의 A·B. 원래 예시에는 집계값만 있어 그 값이 나오는 응답을 구성했다.
  * A: P 5·5·4·4=18, B 3·3·3·3=12, S 5·4·4·4=17, G 3·3·3·2=11, M 2·2·2·2=8
  * B: best P3·B1·S2, worst B1·S1·G1·M3
  */
