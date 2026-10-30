@@ -6,6 +6,8 @@ import {
   displayName,
   extremes,
   membersByArchetype,
+  phaseGaps,
+  referenceShape,
   parseTeamCodes,
   scenarioDistribution,
   totals,
@@ -74,17 +76,36 @@ describe('팀 구성과 다섯 방식의 균형', () => {
     expect(by.G).toEqual({ core: [], second: [] });
   });
 
-  it('오각형 꼭짓점은 일의 흐름 순서', () => {
-    expect(CYCLE).toEqual(['P', 'B', 'G', 'M', 'S']);
+  it('오각형 꼭짓점은 원글 번호(사업이 자라는) 순서', () => {
+    expect(CYCLE).toEqual(['P', 'B', 'S', 'G', 'M']);
   });
 
   it('원형별 주·보조 인원 합과 가장 많은·적은 방식', () => {
     const d = typeDistribution(ms);
     const t = totals(d.core, d.second);
     expect(t).toEqual({ P: 1, B: 1, S: 1, G: 0, M: 1 });
-    expect(extremes(t)).toEqual({ most: ['P', 'B', 'M', 'S'], least: ['G'] });
+    expect(extremes(t)).toEqual({ most: ['P', 'B', 'S', 'M'], least: ['G'] });
     expect(extremes({ P: 2, B: 2, S: 2, G: 2, M: 2 })).toBeNull();
-    expect(extremes({ P: 3, B: 1, S: 0, G: 3, M: 0 })).toEqual({ most: ['P', 'G'], least: ['M', 'S'] });
+    expect(extremes({ P: 3, B: 1, S: 0, G: 3, M: 0 })).toEqual({ most: ['P', 'G'], least: ['S', 'M'] });
+  });
+});
+
+describe('사업 단계별 조합(원글)', () => {
+  it('비교용 모양: 주·보조 자리 2n개를 똑같이, 또는 단계 조합 비율대로', () => {
+    expect(referenceShape(5, null)).toEqual({ P: 2, B: 2, S: 2, G: 2, M: 2 });
+    expect(referenceShape(6, 'new')).toEqual({ P: 4, B: 4, S: 4, G: 0, M: 0 });
+    expect(referenceShape(7, 'growing')).toEqual({ P: 0, B: 4, S: 4, G: 4, M: 2 });
+    expect(referenceShape(7, 'mature')).toEqual({ P: 0, B: 2, S: 4, G: 4, M: 4 });
+  });
+
+  it('필요한 방식, 그중 가장 적은 방식, 조합 밖의 방식', () => {
+    expect(phaseGaps({ P: 4, B: 3, S: 2, G: 2, M: 3 }, 'mature')).toEqual({
+      need: ['S', 'G', 'M'],
+      some: ['B'],
+      fewest: ['S', 'G'],
+      outside: ['P'],
+    });
+    expect(phaseGaps({ P: 2, B: 2, S: 2, G: 0, M: 1 }, 'new')).toEqual({ need: ['P', 'B', 'S'], some: [], fewest: [], outside: ['M'] });
   });
 });
 

@@ -161,6 +161,13 @@ async function run(colorScheme) {
   check((await pent.getAttribute('aria-label')).includes('Prototyper 주 1 · 보조 1'), '오각형 대체 텍스트');
   check((await page.locator('.pent-dot').count()) === 5, '오각형 꼭짓점 5개');
   check((await page.locator('#sec-tasks').count()) === 0, '업무 섹션 없음');
+  await page.click('.phase-option:has-text("안정기 사업")');
+  const bal2 = await page.innerText('section[aria-labelledby="sec-balance"]');
+  check(/이 단계에 필요한 방식\s*Sweeper\(보조 1명\), Grower\(없음\), Maintainer\(없음\)/.test(bal2), '안정기 사업에 필요한 방식');
+  check(/약간 필요한 방식\s*Builder\(주 1명\)/.test(bal2), '약간 필요한 방식');
+  check(/그중 가장 적은 방식\s*Grower\(없음\), Maintainer\(없음\)/.test(bal2), '필요한데 가장 적은 방식');
+  check(/이 단계 조합 밖의 방식\s*Prototyper\(주 1명 · 보조 1명\)/.test(bal2), '단계 조합 밖의 방식');
+  check(bal2.includes('안정기 사업에 필요한 조합') && bal2.includes('Boris Cherny'), '단계 점선 범례와 출처');
   await noHScroll(page, '팀');
   await shot(page, `${colorScheme}-06-team`);
 

@@ -13,10 +13,20 @@ const BLOCK = 61;
 const GAP = 12;
 
 /**
- * 팀 안의 다섯 방식. 꼭짓점은 일의 흐름 순서로 두고,
- * 바깥 면은 주·보조 유형 인원, 안쪽 면은 주 유형 인원, 점선은 똑같이 나뉘었을 때.
+ * 팀 안의 다섯 방식. 꼭짓점은 원글 번호(사업이 자라는) 순서로 두고,
+ * 바깥 면은 주·보조 유형 인원, 안쪽 면은 주 유형 인원, 점선은 비교용 모양(똑같이 또는 단계별 조합).
  */
-export function TeamPentagon({ core, second, n }: { core: Counts; second: Counts; n: number }) {
+export function TeamPentagon({
+  core,
+  second,
+  reference,
+  referenceLabel,
+}: {
+  core: Counts;
+  second: Counts;
+  reference: Counts;
+  referenceLabel: string;
+}) {
   const [ref, width] = useWidth<HTMLDivElement>();
   // 옆 꼭짓점의 이름 덩어리(가운데가 꼭짓점에서 26px 바깥, 너비 약 68px)가 화면 안에 들어오는 만큼
   const R = Math.max(70, Math.min(110, (width / 2 - 62) / 0.951));
@@ -25,7 +35,7 @@ export function TeamPentagon({ core, second, n }: { core: Counts; second: Counts
   const height = Math.round(cy + R * 0.809 + GAP + BLOCK + 6);
 
   const total = (a: Archetype) => core[a] + second[a];
-  const maxV = Math.max(1, ...CYCLE.map(total));
+  const maxV = Math.max(1, ...CYCLE.map(total), ...CYCLE.map((a) => Math.ceil(reference[a])));
   const step = maxV <= 6 ? 1 : Math.ceil(maxV / 4);
   const scaleMax = step * Math.ceil(maxV / step);
   const rings = Array.from({ length: scaleMax / step }, (_, k) => (k + 1) * step);
@@ -40,7 +50,6 @@ export function TeamPentagon({ core, second, n }: { core: Counts; second: Counts
     return { x: cx + r * d.x, y: cy + r * d.y };
   };
   const poly = (vals: number[]) => vals.map((v, i) => pt(i, v)).map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
-  const even = (2 * n) / 5;
 
   /** 이름 덩어리의 가운데 x와 위쪽 y. 위쪽 세 꼭짓점은 꼭짓점 위에, 아래쪽 둘은 아래에 단다 */
   const block = (i: number) => {
@@ -51,7 +60,7 @@ export function TeamPentagon({ core, second, n }: { core: Counts; second: Counts
   };
   const countText = (a: Archetype) => (total(a) ? [core[a] && `주 ${core[a]}`, second[a] && `보조 ${second[a]}`].filter(Boolean).join(' · ') : '없음');
 
-  const summary = `다섯 방식의 균형. ${CYCLE.map((a) => `${NAMES[a]} ${countText(a)}`).join(', ')}`;
+  const summary = `다섯 방식의 균형. ${CYCLE.map((a) => `${NAMES[a]} ${countText(a)}`).join(', ')}. 점선: ${referenceLabel}`;
 
   return (
     <figure class="chart pentagon">
@@ -72,7 +81,7 @@ export function TeamPentagon({ core, second, n }: { core: Counts; second: Counts
               return <circle key={a} class="pent-dot" cx={p.x} cy={p.y} r={4} />;
             })}
           </g>
-          {n > 0 && <polygon class="pent-even" points={poly(CYCLE.map(() => even))} />}
+          <polygon class="pent-even" points={poly(CYCLE.map((a) => reference[a]))} />
           {CYCLE.map((a, i) => {
             const b = block(i);
             return (
@@ -97,7 +106,7 @@ export function TeamPentagon({ core, second, n }: { core: Counts; second: Counts
           <span class="swatch swatch-total" /> 주·보조 유형
         </li>
         <li>
-          <span class="swatch-even" /> 똑같이 나뉘었을 때
+          <span class="swatch-even" /> {referenceLabel}
         </li>
         <li>회색 선 한 칸 = {step}명</li>
       </ul>

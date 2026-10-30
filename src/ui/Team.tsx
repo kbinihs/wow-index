@@ -8,10 +8,29 @@ import {
   BALANCE_MOST,
   BALANCE_TITLE,
   countLabel,
+  EVEN_LEGEND,
+  EVEN_NOTE,
+  GAP_LABELS,
+  PHASE_NOTE,
+  PHASE_QUESTION,
+  PHASE_TEXT,
+  phaseLegend,
   smallTeamText,
   TEAM_INTRO,
 } from '../data/teamText';
-import { displayName, extremes, membersByArchetype, parseTeamCodes, totals, typeDistribution, type ParsedTeam } from '../team';
+import {
+  displayName,
+  extremes,
+  membersByArchetype,
+  parseTeamCodes,
+  phaseGaps,
+  PHASES,
+  referenceShape,
+  totals,
+  typeDistribution,
+  type ParsedTeam,
+  type PhaseId,
+} from '../team';
 import { ARCHETYPES, type Archetype } from '../types';
 import { TeamPentagon } from './charts/TeamPentagon';
 import { announce, Section, useFocusHeading } from './common';
@@ -23,12 +42,15 @@ export function Team() {
   const [input, setInput] = useState('');
   const [parsed, setParsed] = useState<ParsedTeam | null>(null);
   const [hide, setHide] = useState(false);
+  const [phase, setPhase] = useState<PhaseId | null>(null);
 
   const members = parsed?.members ?? [];
   const dist = useMemo(() => typeDistribution(members), [members]);
   const types = dist.types;
   const by = useMemo(() => membersByArchetype(members), [members]);
-  const ext = extremes(totals(dist.core, dist.second));
+  const total = totals(dist.core, dist.second);
+  const ext = extremes(total);
+  const gaps = phase ? phaseGaps(total, phase) : null;
   const label = (as: Archetype[]) => as.map((a) => countLabel(a, dist.core[a], dist.second[a])).join(', ');
   const names = (idx: number[]) => (idx.length ? idx.map((i) => displayName(members[i], i, hide)).join(', ') : '없음');
 
@@ -83,9 +105,54 @@ export function Team() {
           </Section>
 
           <Section title={BALANCE_TITLE} id="sec-balance">
-            <p class="hint">{BALANCE_HINT}</p>
-            <TeamPentagon core={dist.core} second={dist.second} n={members.length} />
-            {ext ? (
+            <fieldset class="phase-pick no-print">
+              <legend>{PHASE_QUESTION}</legend>
+              {([null, ...PHASES.map((p) => p.id)] as (PhaseId | null)[]).map((id) => {
+                const t = PHASE_TEXT[id ?? 'none'];
+                return (
+                  <label key={id ?? 'none'} class={`phase-option${phase === id ? ' is-on' : ''}`}>
+                    <input type="radio" name="phase" checked={phase === id} onChange={() => setPhase(id)} />
+                    <span class="phase-label">{t.label}</span>
+                    <span class="phase-desc">{t.desc}</span>
+                  </label>
+                );
+              })}
+            </fieldset>
+            <p class="hint">
+              {BALANCE_HINT} {phase ? PHASE_NOTE : EVEN_NOTE}
+            </p>
+            <TeamPentagon
+              core={dist.core}
+              second={dist.second}
+              reference={referenceShape(members.length, phase)}
+              referenceLabel={phase ? phaseLegend(phase) : EVEN_LEGEND}
+            />
+            {gaps ? (
+              <dl class="rows">
+                <div class="row">
+                  <dt>{GAP_LABELS.need}</dt>
+                  <dd>{label(gaps.need)}</dd>
+                </div>
+                {gaps.some.length > 0 && (
+                  <div class="row">
+                    <dt>{GAP_LABELS.some}</dt>
+                    <dd>{label(gaps.some)}</dd>
+                  </div>
+                )}
+                {gaps.fewest.length > 0 && (
+                  <div class="row">
+                    <dt>{GAP_LABELS.fewest}</dt>
+                    <dd>{label(gaps.fewest)}</dd>
+                  </div>
+                )}
+                {gaps.outside.length > 0 && (
+                  <div class="row">
+                    <dt>{GAP_LABELS.outside}</dt>
+                    <dd>{label(gaps.outside)}</dd>
+                  </div>
+                )}
+              </dl>
+            ) : ext ? (
               <dl class="rows">
                 <div class="row">
                   <dt>{BALANCE_MOST}</dt>

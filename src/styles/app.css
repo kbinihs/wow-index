@@ -842,6 +842,51 @@ fieldset.question legend {
 
 /* ── 팀 오각형 ─────────────────────────────────────── */
 
+.phase-pick {
+  border: 0;
+  padding: 0;
+  margin: 0 0 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+}
+.phase-pick legend {
+  padding: 0;
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+.phase-option {
+  position: relative;
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  cursor: pointer;
+}
+.phase-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.phase-option:has(input:focus-visible) {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+.phase-option.is-on {
+  border: 2px solid var(--orange-ui);
+  padding: 9px 11px;
+  background: var(--accent-soft);
+}
+.phase-label {
+  font-weight: 700;
+}
+.phase-desc {
+  font-size: 13px;
+  color: var(--text-2);
+}
+
 .pent-ring {
   fill: none;
   stroke: var(--grid);
