@@ -58,8 +58,8 @@ describe('상황 선택 설계', () => {
     for (const sc of SCENARIOS) expect(Object.keys(sc.roles).sort(), sc.id).toEqual([...ARCHETYPES].sort());
   });
 
-  it('상황은 한 문장이다', () => {
-    for (const sc of SCENARIOS) expect(sc.situation, sc.id).toMatch(/^[^.\n]+\.$/);
+  it('상황은 합니다체 한 문장이다', () => {
+    for (const sc of SCENARIOS) expect(sc.situation, sc.id).toMatch(/^[^.\n]+니다\.$/);
   });
 
   it('역할은 모두 "~는 역할"로 끝나고, 한 상황 안에서 길이 차이가 10자 이내다', () => {

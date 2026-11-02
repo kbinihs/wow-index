@@ -23,7 +23,7 @@ export const B_GUIDE_SHORT = '아래 역할은 모두 팀에 필요한 일이고
 export const SCENARIOS: readonly Scenario[] = [
   {
     id: 'B1',
-    situation: '새 기업 후원사가 함께 일하고 싶다며 연락해 왔다.',
+    situation: '새 기업 후원사가 함께 일하고 싶다며 연락해 왔습니다.',
     roles: {
       P: '후원사에 제안할 서로 다른 협력 아이디어를 여러 개 내는 역할',
       B: '고른 협력안을 바로 시작할 수 있게 실행 계획을 짜는 역할',
@@ -34,7 +34,7 @@ export const SCENARIOS: readonly Scenario[] = [
   },
   {
     id: 'B2',
-    situation: '5년째 이어진 현장 사업의 성과가 정체되어 있다.',
+    situation: '5년째 이어진 현장 사업의 성과가 정체되어 있습니다.',
     roles: {
       P: '지금과 완전히 다른 접근을 몇 가지 작게 시험해 보는 역할',
       B: '시험에서 효과가 확인된 접근을 본사업 전체에 빠르게 적용하는 역할',
@@ -45,7 +45,7 @@ export const SCENARIOS: readonly Scenario[] = [
   },
   {
     id: 'B3',
-    situation: '팀이 맡은 서비스를 찾는 사람이 1년 사이 세 배로 늘었다.',
+    situation: '팀이 맡은 서비스를 찾는 사람이 1년 사이 세 배로 늘었습니다.',
     roles: {
       P: '이 서비스에서 출발해 해 볼 만한 새 서비스를 여러 개 구상하는 역할',
       B: '임시로 돌리던 방식을 늘어난 규모에 맞는 정식 체계로 만드는 역할',
@@ -56,7 +56,7 @@ export const SCENARIOS: readonly Scenario[] = [
   },
   {
     id: 'B4',
-    situation: '후원자에게 보내는 연간 보고서를 올해 새로 손보게 되었다.',
+    situation: '후원자에게 보내는 연간 보고서를 올해 새로 손보게 되었습니다.',
     roles: {
       P: '영상·대시보드 같은 새 보고 형식을 여러 가지 시험해 보는 역할',
       B: '보고서에 들어갈 자료가 자동으로 모이는 체계를 만드는 역할',
@@ -67,7 +67,7 @@ export const SCENARIOS: readonly Scenario[] = [
   },
   {
     id: 'B5',
-    situation: '한 부서에서 시범 운영한 새 제도를 기관 전체로 넓히게 되었다.',
+    situation: '한 부서에서 시범 운영한 새 제도를 기관 전체로 넓히게 되었습니다.',
     roles: {
       P: '부서마다 다르게 적용해 볼 방법을 여러 가지 구상하는 역할',
       B: '모든 부서가 바로 쓸 수 있게 운영 지침과 양식을 만드는 역할',
@@ -78,7 +78,7 @@ export const SCENARIOS: readonly Scenario[] = [
   },
   {
     id: 'B6',
-    situation: '처음 함께하는 나라의 현지 사무소와 새 사업을 논의하게 되었다.',
+    situation: '처음 함께하는 나라의 현지 사무소와 새 사업을 논의하게 되었습니다.',
     roles: {
       P: '현장에서 들은 문제로 여러 해법 초안을 그려 보는 역할',
       B: '논의한 아이디어를 현지 사무소가 실행할 수 있는 설계로 만드는 역할',
