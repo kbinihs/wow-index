@@ -91,10 +91,8 @@ async function run(colorScheme) {
   await shot(page, `${colorScheme}-00-start`);
   await noHScroll(page, '시작');
   const startText = await page.innerText('main');
-  check(
-    !startText.includes('팀 결과 모아 보기') && !startText.includes('파일럿') && (await page.locator('a[href="#/team"], a[href="#/analysis"]').count()) === 0,
-    '응답 화면에 관리용 링크 없음',
-  );
+  check(!startText.includes('파일럿') && (await page.locator('a[href="#/analysis"]').count()) === 0, '응답 화면에 파일럿 분석 링크 없음');
+  check(startText.includes('팀 결과 모아 보기') && (await page.locator('a[href="#/team"]').count()) === 1, '응답 화면에서 팀 화면 열기');
   await page.click('text=시작하기');
 
   await answerA(page, EX1_A, colorScheme, true);
@@ -217,9 +215,10 @@ async function run(colorScheme) {
   await page.click('button:has-text("결과 열기")');
   await page.waitForSelector('.result-head');
   check((await page.$('#share-code')) !== null && (await page.inputValue('#share-nick')) === '가', '내 팀 코드로 다시 열어도 내 결과');
-  // 응답 화면에는 팀 화면이 없다(처음 화면으로)
+  // 응답 화면에서도 팀 화면을 연다(돌아가기는 처음 화면)
   await page.goto(FILE + '#/team');
-  check(await page.isVisible('.hero'), '응답 화면의 #/team은 처음 화면으로');
+  await page.waitForSelector('#team-codes');
+  check(await page.isVisible('a.btn:has-text("처음 화면으로")'), '응답 화면의 팀 화면');
   // 관리 화면
   await page.goto(ADMIN);
   await page.waitForSelector('h1:has-text("관리 화면")');
@@ -229,6 +228,7 @@ async function run(colorScheme) {
   await shot(page, `${colorScheme}-05b-admin`);
   await page.click('a[href="#/team"]');
   await page.waitForSelector('#team-codes');
+  check(await page.isVisible('a.btn:has-text("관리 화면으로")'), '관리 화면의 팀 화면');
   await page.fill('#team-codes', [myTeamCode, tiedCode, 'not-a-code!', myTeamCode].join('\n'));
   await page.click('button:has-text("불러오기")');
   const teamText = await page.innerText('main');

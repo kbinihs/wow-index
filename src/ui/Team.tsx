@@ -38,7 +38,8 @@ import { announce, Section, useFocusHeading } from './common';
 import { Crest } from './Crest';
 
 /** 팀 화면. 붙여 넣은 코드는 이 화면의 메모리에만 있다. */
-export function Team() {
+/** home: 맨 아래 돌아가기 링크 이름(응답 화면은 처음 화면, 관리 화면은 관리 화면) */
+export function Team({ home = '처음 화면으로' }: { home?: string }) {
   const heading = useFocusHeading('team');
   const [input, setInput] = useState('');
   const [parsed, setParsed] = useState<ParsedTeam | null>(null);
@@ -226,7 +227,7 @@ export function Team() {
           인쇄
         </button>
         <a class="btn btn-secondary" href="#/">
-          관리 화면으로
+          {home}
         </a>
       </div>
     </main>

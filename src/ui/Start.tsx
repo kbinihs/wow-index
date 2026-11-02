@@ -134,6 +134,14 @@ export function Start() {
         </button>
       </form>
 
+      <section class="card entry-card">
+        <h2>팀 결과 모아 보기</h2>
+        <p>팀원들이 보낸 팀 코드를 모아 우리 팀에 다섯 방식이 어떻게 섞여 있는지 봅니다. 팀이 맡은 사업의 단계에 필요한 조합과 비교해 볼 수도 있습니다.</p>
+        <a class="btn btn-secondary" href="#/team">
+          팀 화면 열기
+        </a>
+      </section>
+
       <footer class="disclaimer">{DISCLAIMER}</footer>
     </main>
   );

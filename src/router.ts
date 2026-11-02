@@ -2,17 +2,19 @@ import { useEffect, useState } from 'preact/hooks';
 
 export { extractCode } from './codec';
 
-/** 응답 화면(index.html): 누구나 쓰는 화면 */
+/** 응답 화면(index.html): 누구나 쓰는 화면. 팀 화면은 팀마다 직접 쓸 수 있게 여기에도 있다. */
 export type Route =
   | { name: 'start' }
   | { name: 'test' }
   | { name: 'result'; code: string }
+  | { name: 'team' }
   | { name: 'export' }
   | { name: 'pilot' };
 
 export function parseHash(hash: string): Route {
   const path = hash.replace(/^#/, '') || '/';
   if (path === '/test') return { name: 'test' };
+  if (path === '/team') return { name: 'team' };
   if (path === '/export') return { name: 'export' };
   if (path === '/pilot') return { name: 'pilot' };
   const m = path.match(/^\/result\/(.+)$/);
@@ -20,7 +22,7 @@ export function parseHash(hash: string): Route {
   return { name: 'start' };
 }
 
-/** 관리 화면(admin.html): 진행자만 쓰는 화면 */
+/** 관리 화면(admin.html): 진행자가 쓰는 화면(팀 화면 + 파일럿 분석) */
 export type AdminRoute = { name: 'home' } | { name: 'team' } | { name: 'analysis' };
 
 export function parseAdminHash(hash: string): AdminRoute {

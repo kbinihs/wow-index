@@ -36,7 +36,7 @@ export function AdminApp() {
         </a>
       </header>
       {route.name === 'home' && <AdminHome />}
-      {route.name === 'team' && <Team />}
+      {route.name === 'team' && <Team home="관리 화면으로" />}
       {route.name === 'analysis' && <Analysis />}
       <div id="live-region" class="sr-only" aria-live="polite" aria-atomic="true" />
     </>

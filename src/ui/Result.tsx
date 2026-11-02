@@ -244,7 +244,7 @@ function Share({ summary, initialNick }: { summary: Summary; initialNick: string
   })();
   const isWeb = /^https?:$/.test(window.location.protocol) && !framed;
   const teamCode = encode(summary, nick);
-  // 팀 코드와 결과 링크는 같은 코드를 담는다(별명 포함). 진행자는 어느 쪽을 받아도 팀 화면에 붙여 넣을 수 있다.
+  // 팀 코드와 결과 링크는 같은 코드를 담는다(별명 포함). 받는 사람은 어느 쪽을 받아도 팀 화면에 붙여 넣을 수 있다.
   const link = `${window.location.origin}${window.location.pathname}#/result/${teamCode}`;
 
   const copy = async (text: string, el: HTMLInputElement | null, what: string) => {
@@ -279,7 +279,7 @@ function Share({ summary, initialNick }: { summary: Summary; initialNick: string
             복사
           </button>
         </div>
-        <p class="hint">진행자에게는 이 팀 코드를 보내 주세요. 처음 화면의 '받은 결과 보기'에 넣으면 이 결과를 다시 열 수 있습니다.</p>
+        <p class="hint">팀 구성을 볼 사람(팀장이나 진행자)에게 이 팀 코드를 보내 주세요. 처음 화면의 '받은 결과 보기'에 넣으면 이 결과를 다시 열 수 있습니다.</p>
       </div>
 
       {isWeb && (

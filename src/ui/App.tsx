@@ -6,17 +6,19 @@ import { Start } from './Start';
 import { Test } from './Test';
 import { Wordmark } from './Brand';
 import { Export } from './Export';
+import { Team } from './Team';
 
 /** 탭·방문 기록·스크린리더가 지금 화면을 알 수 있게 페이지 제목을 바꾼다 */
 const TITLES: Record<Route['name'], string> = {
   start: '',
   test: '질문에 답하기',
   result: '결과',
+  team: '우리 팀 구성',
   export: '응답 파일 내보내기',
   pilot: '',
 };
 
-/** 응답 화면(index.html). 팀 화면과 파일럿 분석은 관리 화면(admin.html)에 있다. */
+/** 응답 화면(index.html). 파일럿 분석은 관리 화면(admin.html)에만 있다. */
 
 export function App() {
   const route = useRoute();
@@ -48,6 +50,7 @@ export function App() {
       )}
       {route.name === 'test' && <Test />}
       {route.name === 'result' && <Result key={route.code} code={route.code} />}
+      {route.name === 'team' && <Team />}
       {route.name === 'export' && <Export />}
       {route.name === 'start' && <Start />}
       <div id="live-region" class="sr-only" aria-live="polite" aria-atomic="true" />

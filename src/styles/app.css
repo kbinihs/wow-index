@@ -1163,10 +1163,10 @@ textarea {
   padding: 6px 14px;
   font-size: 15px;
 }
-.admin-card .btn {
+.entry-card .btn {
   margin-top: 4px;
 }
-.admin-card + .admin-card {
+.entry-card + .entry-card {
   margin-top: 16px;
 }
 
