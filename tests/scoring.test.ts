@@ -204,6 +204,23 @@ describe('문구', () => {
     expect(Object.keys(COMBOS)).toHaveLength(20);
   });
 
+  it('다섯 프로필의 짜임이 같다: 강점 4개, 주의할 점 3개, 잘 맞는 일은 "~하기" 나열', () => {
+    for (const a of ARCHETYPES) {
+      expect(PROFILES[a].strengths, a).toHaveLength(4);
+      expect(PROFILES[a].cautions, a).toHaveLength(3);
+      for (const f of PROFILES[a].fits.split(', ')) expect(f, a).toMatch(/기$/);
+    }
+  });
+
+  it('결과 문구도 문항처럼 절대어나 결정권이 있어야 하는 일을 쓰지 않는다', () => {
+    for (const a of ARCHETYPES) {
+      for (const t of [...PROFILES[a].strengths, PROFILES[a].fits]) {
+        expect(t, a).not.toMatch(/아무도|누구도/);
+        expect(t, a).not.toMatch(/승인|예산|협약/);
+      }
+    }
+  });
+
   it('머리 문장에는 원형 이름 대신 일 이름을 쓴다', () => {
     const names = Object.values(NAMES);
     for (const [c, s2] of [['P', 'S'], ['M', 'G']] as const) {

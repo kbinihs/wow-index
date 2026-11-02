@@ -19,7 +19,7 @@ export const PHASE_TEXT: Record<PhaseId | 'none', { label: string; desc: string 
   none: { label: '정하지 않음', desc: '다섯 방식이 똑같이 나뉜 모양과 비교' },
   new: { label: '새 사업', desc: '효과를 아직 확인하는 중인 새 사업·시범 사업' },
   growing: { label: '확대 중인 사업', desc: '효과가 확인되어 넓혀 가는 사업' },
-  mature: { label: '안정기 사업', desc: '효과가 자리 잡아 오래 운영하는 사업' },
+  mature: { label: '안정기 사업', desc: '자리 잡아 오래 운영하는 사업' },
 };
 export const EVEN_LEGEND = '똑같이 나뉘었을 때';
 export const phaseLegend = (id: PhaseId) => `${PHASE_TEXT[id].label}에 필요한 조합`;

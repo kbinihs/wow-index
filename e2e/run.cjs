@@ -322,7 +322,7 @@ async function run(colorScheme) {
   check(csvText.split('\n').filter(Boolean).length === 3 && csvText.includes('P07') && csvText.includes('P08'), 'CSV 두 줄');
   // 같은 파일을 다시 골라도 한 번만 센다
   await page.setInputFiles('#pilot-files', [{ name: 'a.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(exported)) }]);
-  await page.waitForSelector('text=이미 읽은 응답과 같아 뺀 것: 1개');
+  await page.waitForSelector('text=이미 불러온 응답과 같아 뺀 것: 1개');
   check((await page.innerText('main')).includes('참여자 2명'), '같은 응답 파일은 한 번만 셈');
   await noHScroll(page, '분석');
   await shot(page, `${colorScheme}-07-analysis`);

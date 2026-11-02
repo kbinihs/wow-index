@@ -306,7 +306,7 @@ function Share({ summary, initialNick }: { summary: Summary; initialNick: string
   return (
     <Section title="공유" id="sec-share">
       <p class="notice" role="note">
-        팀 코드나 결과 링크를 다른 사람에게 보내면 내 결과 요약(다섯 방식 점수, 상황별로 고른 역할)과 아래에 적은 별명이 함께 전달됩니다. 문항별 응답은 들어가지 않습니다.
+        팀 코드나 결과 링크를 다른 사람에게 보내면 내 결과 요약과 아래에 적은 별명이 함께 전달됩니다. 결과 요약에는 다섯 방식의 문항 점수와 상황마다 고른 역할이 들어 있고, 문항별 응답은 들어 있지 않습니다.
       </p>
 
       <div class="field no-print">

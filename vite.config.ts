@@ -29,7 +29,7 @@ function csp(): Plugin {
 /**
  * 응답 화면(index.html)과 관리 화면(admin.html)을 따로 한 파일씩 만든다.
  * singlefile은 입력 하나만 인라인할 수 있어서 두 번 빌드한다(`vite build`, `vite build --mode admin`).
- * 관리 화면 코드(팀 화면, 파일럿 분석)는 응답 화면 파일에 들어가지 않는다.
+ * 파일럿 분석 코드는 응답 화면 파일에 들어가지 않는다(팀 화면은 두 화면 모두에 있다).
  */
 export default defineConfig(({ mode }) => ({
   base: './',

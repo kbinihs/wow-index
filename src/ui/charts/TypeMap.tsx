@@ -1,5 +1,6 @@
 import { NAMES } from '../../data/profiles';
 import type { Placement } from '../../scoring';
+import { joinAnd } from '../../text';
 import { ARCHETYPES, type Archetype } from '../../types';
 import { Crest } from '../Crest';
 import { useWidth } from './svg';
@@ -55,8 +56,8 @@ export function TypeMap({ placement }: { placement: Placement }) {
   const summary = [
     `주 유형 ${NAMES[placement.core!]}`,
     `보조 유형 ${NAMES[placement.second!]}`,
-    `성장 방향 ${placement.growth.map((a) => NAMES[a]).join(', ')}`,
-    placement.partners.length ? `채워 줄 짝 ${placement.partners.map((a) => NAMES[a]).join(', ')}` : '채워 줄 짝 뚜렷하지 않음',
+    `성장 방향 ${joinAnd(placement.growth.map((a) => NAMES[a]))}`,
+    placement.partners.length ? `채워 줄 짝 ${joinAnd(placement.partners.map((a) => NAMES[a]))}` : '채워 줄 짝 뚜렷하지 않음',
   ].join(', ');
 
   return (
