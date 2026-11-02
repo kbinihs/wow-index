@@ -226,7 +226,7 @@ export function Team() {
           인쇄
         </button>
         <a class="btn btn-secondary" href="#/">
-          처음 화면으로
+          관리 화면으로
         </a>
       </div>
     </main>

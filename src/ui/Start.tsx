@@ -5,6 +5,7 @@ import { clearProgress, hasAnswers, loadProgress, newProgress, saveProgress, sum
 import { extractCode, navigate, resultHash } from '../router';
 import { ARCHETYPES } from '../types';
 import { NAMES } from '../data/profiles';
+import { isPilotMode } from '../pilotMode';
 import { Horizon, TITLE_SUB, Wordmark } from './Brand';
 import { useFocusHeading } from './common';
 import { Crest } from './Crest';
@@ -64,6 +65,11 @@ export function Start() {
         <li>응답은 이 브라우저 안에서만 처리하고 서버로 보내지 않습니다.</li>
         <li>중간에 창을 닫아도 이 브라우저에 저장되어 이어서 할 수 있습니다.</li>
       </ul>
+      {isPilotMode() && (
+        <p class="notice" role="note">
+          파일럿 참여 링크로 들어왔습니다. 응답을 마치면 결과 화면에서 응답 파일을 내보낼 수 있습니다.
+        </p>
+      )}
 
       <div class="actions">
         {finished ? (
@@ -127,20 +133,6 @@ export function Start() {
           결과 열기
         </button>
       </form>
-
-      <section class="card team-entry">
-        <h2>팀 결과 모아 보기</h2>
-        <p>팀원들이 보낸 팀 코드를 모아 우리 팀에 다섯 방식이 어떻게 섞여 있는지 봅니다. 팀이 맡은 사업의 단계에 필요한 조합과 비교해 볼 수도 있습니다.</p>
-        <a class="btn btn-secondary" href="#/team">
-          팀 화면 열기
-        </a>
-      </section>
-
-      <p class="minor-link">
-        <a href="#/analysis" class="text-link">
-          파일럿 응답 분석(진행자용)
-        </a>
-      </p>
 
       <footer class="disclaimer">{DISCLAIMER}</footer>
     </main>

@@ -288,7 +288,7 @@ export function Analysis() {
 
       <p>
         <a href="#/" class="text-link">
-          처음 화면으로
+          관리 화면으로
         </a>
       </p>
     </main>

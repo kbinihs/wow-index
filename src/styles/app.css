@@ -111,10 +111,20 @@ a {
 .site-title {
   display: inline-flex;
   align-items: center;
+  gap: 10px;
   min-height: 44px;
   color: var(--text);
   text-decoration: none;
   font-size: 1.15rem;
+}
+/* 관리 화면 머리줄 표시 */
+.site-badge {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--text-2);
 }
 .page {
   max-width: 640px;
@@ -1153,8 +1163,11 @@ textarea {
   padding: 6px 14px;
   font-size: 15px;
 }
-.team-entry .btn {
+.admin-card .btn {
   margin-top: 4px;
+}
+.admin-card + .admin-card {
+  margin-top: 16px;
 }
 
 /* ── 파일럿 내보내기·분석 ─────────────────────────── */

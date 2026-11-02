@@ -1,10 +1,11 @@
-// 빌드된 dist/index.html을 file://로 열고, 네트워크를 모두 막은 상태에서 예시 1 응답으로 끝까지 진행한다.
+// 빌드된 dist/index.html(응답 화면)과 dist/admin.html(관리 화면)을 file://로 열고, 네트워크를 모두 막은 상태에서 예시 1 응답으로 끝까지 진행한다.
 // 사용: npm run build && node e2e/run.cjs [스크린샷 폴더]
 const { chromium } = require('playwright');
 const path = require('path');
 const fs = require('fs');
 
 const FILE = 'file://' + path.resolve(__dirname, '../dist/index.html');
+const ADMIN = 'file://' + path.resolve(__dirname, '../dist/admin.html');
 const SHOTS = process.argv[2];
 
 const EX1_A = {
@@ -89,6 +90,11 @@ async function run(colorScheme) {
   await page.goto(FILE);
   await shot(page, `${colorScheme}-00-start`);
   await noHScroll(page, '시작');
+  const startText = await page.innerText('main');
+  check(
+    !startText.includes('팀 결과 모아 보기') && !startText.includes('파일럿') && (await page.locator('a[href="#/team"], a[href="#/analysis"]').count()) === 0,
+    '응답 화면에 관리용 링크 없음',
+  );
   await page.click('text=시작하기');
 
   await answerA(page, EX1_A, colorScheme, true);
@@ -97,6 +103,7 @@ async function run(colorScheme) {
   // 결과
   await page.waitForSelector('.result-head');
   const text = await page.innerText('main');
+  check((await page.locator('a[href="#/export"]').count()) === 0, '파일럿 참여 링크로 들어오지 않으면 내보내기 링크 없음');
   check((await page.innerText('h1')).trim() === 'Prototyper-Sweeper', '유형 Prototyper-Sweeper');
   check(text.includes('응답을 모아 보니 새 아이디어를 내고 만들어 보는 일이 가장 앞섰고, 그다음은 다듬고 덜어 내는 일이었습니다.'), '머리 문장');
   check(!text.includes('상황 선택에서') && !text.includes('끌림') && !text.includes('끌렸'), '상황 선택 섹션 없음, 끌림 표현 없음');
@@ -210,7 +217,18 @@ async function run(colorScheme) {
   await page.click('button:has-text("결과 열기")');
   await page.waitForSelector('.result-head');
   check((await page.$('#share-code')) !== null && (await page.inputValue('#share-nick')) === '가', '내 팀 코드로 다시 열어도 내 결과');
+  // 응답 화면에는 팀 화면이 없다(처음 화면으로)
   await page.goto(FILE + '#/team');
+  check(await page.isVisible('.hero'), '응답 화면의 #/team은 처음 화면으로');
+  // 관리 화면
+  await page.goto(ADMIN);
+  await page.waitForSelector('h1:has-text("관리 화면")');
+  check((await page.inputValue('#pilot-link')).endsWith('/index.html#/pilot'), '파일럿 참여 링크');
+  check((await page.locator('a[href="#/team"]').count()) === 1 && (await page.locator('a[href="#/analysis"]').count()) === 1, '관리 화면에 팀·분석 링크');
+  await noHScroll(page, '관리');
+  await shot(page, `${colorScheme}-05b-admin`);
+  await page.click('a[href="#/team"]');
+  await page.waitForSelector('#team-codes');
   await page.fill('#team-codes', [myTeamCode, tiedCode, 'not-a-code!', myTeamCode].join('\n'));
   await page.click('button:has-text("불러오기")');
   const teamText = await page.innerText('main');
@@ -243,8 +261,14 @@ async function run(colorScheme) {
   const emptyText = await page.innerText('main');
   check(emptyText.includes('팀 코드나 결과 링크를 한 줄에 하나씩 붙여 넣어 주세요.') && emptyText.includes('팀원 2명'), '빈 입력은 안내만, 불러온 팀은 그대로');
 
+  // 파일럿 참여 링크로 들어오면 결과 화면에 내보내기 링크가 생긴다
+  await page.goto(FILE + '#/pilot');
+  await page.waitForSelector('text=파일럿 참여 링크로 들어왔습니다');
+  check(!(await page.url()).endsWith('#/pilot'), '참여 링크는 처음 화면으로 바뀜');
+  await page.goto(FILE + '#/result/' + code);
+  await page.waitForSelector('.result-head');
+  await page.click('a[href="#/export"]');
   // 응답 파일 내보내기 → 분석
-  await page.goto(FILE + '#/export');
   check(await page.locator('button:has-text("파일 내려받기")').isDisabled(), '동의 전 내려받기 비활성');
   await page.fill('#pilot-label', 'P07');
   await page.check('text=내 응답 파일을 파일럿 분석에 쓰는 데 동의합니다.');
@@ -257,7 +281,7 @@ async function run(colorScheme) {
   await noHScroll(page, '내보내기');
   // 다른 참여자의 응답이므로 시작 시각이 다르다(같으면 같은 응답으로 보고 한 번만 센다)
   const exported2 = { ...exported, startedAt: '2026-01-01T00:00:00.000Z', label: 'P08', a: { ...exported.a, A01: 1, A02: 2 } };
-  await page.goto(FILE + '#/analysis');
+  await page.goto(ADMIN + '#/analysis');
   await page.setInputFiles('#pilot-files', [
     { name: 'a.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(exported)) },
     { name: 'b.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(exported2)) },

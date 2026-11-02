@@ -20,6 +20,7 @@ import {
   type Profile,
 } from '../data/profiles';
 import { clearProgress, loadProgress, summaryOf } from '../progress';
+import { isPilotMode } from '../pilotMode';
 import { navigate } from '../router';
 import { bCounts, neededPicks, score } from '../scoring';
 import type { Archetype, Summary } from '../types';
@@ -298,11 +299,13 @@ function Share({ summary, initialNick }: { summary: Summary; initialNick: string
         {status}
       </p>
 
-      <p class="minor-link no-print">
-        <a href="#/export" class="text-link">
-          파일럿에 참여했다면 응답 파일 내보내기
-        </a>
-      </p>
+      {isPilotMode() && (
+        <p class="minor-link no-print">
+          <a href="#/export" class="text-link">
+            파일럿 응답 파일 내보내기
+          </a>
+        </p>
+      )}
 
       <div class="actions no-print">
         <button type="button" class="btn btn-secondary" onClick={() => window.print()}>

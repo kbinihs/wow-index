@@ -8,7 +8,7 @@
 npm install
 npm run dev        # 개발 서버
 npm test           # 단위 테스트
-npm run build      # dist/index.html 한 파일로 빌드
+npm run build      # dist/index.html(응답 화면), dist/admin.html(관리 화면)을 각각 한 파일로 빌드
 npx playwright install chromium   # e2e를 처음 돌리기 전에 한 번
 npm run e2e        # 빌드 결과를 브라우저로 끝까지 진행해 보는 검사(Playwright)
 npm run contrast   # 색 대비 검사
@@ -17,14 +17,27 @@ npm run copy-doc   # 결과 문구 문서(docs/result-copy.md) 다시 만들기
 
 ## 화면
 
-| 주소 | 화면 | 쓰는 사람 |
-|---|---|---|
-| `#/` | 처음 화면 | 모두 |
-| `#/test` | 질문(업무 선호 20문항 + 상황 선택 6개) | 참여자 |
-| `#/result/<코드>` | 결과 | 참여자, 받은 사람 |
-| `#/team` | 우리 팀 구성(팀 코드 모아 보기) | 진행자 |
-| `#/export` | 파일럿 응답 파일 내보내기 | 파일럿 참여자 |
-| `#/analysis` | 파일럿 응답 분석(알파, 문항-나머지 상관, CSV) | 진행자 |
+응답 화면과 관리 화면은 서로 다른 파일입니다. 응답 화면에는 관리 화면으로 가는 링크가 없고, 관리 화면 코드(팀 화면, 파일럿 분석)도 들어 있지 않습니다.
+
+**응답 화면** `/` (dist/index.html) — 모두
+
+| 주소 | 화면 |
+|---|---|
+| `#/` | 처음 화면 |
+| `#/test` | 질문(업무 선호 20문항 + 상황 선택 6개) |
+| `#/result/<코드>` | 결과(내 결과, 받은 결과) |
+| `#/pilot` | 파일럿 참여 링크. 이 브라우저에 참여 표시를 켜고 처음 화면으로 갑니다. 켜진 브라우저에서만 결과 화면에 '파일럿 응답 파일 내보내기'가 보입니다. |
+| `#/export` | 파일럿 응답 파일 내보내기 |
+
+**관리 화면** `/admin` (dist/admin.html) — 진행자
+
+| 주소 | 화면 |
+|---|---|
+| `#/` | 관리 화면(팀 화면·분석으로 가는 링크, 파일럿 참여 링크 복사) |
+| `#/team` | 우리 팀 구성(팀 코드 모아 보기, 사업 단계별 조합 비교) |
+| `#/analysis` | 파일럿 응답 분석(알파, 문항-나머지 상관, CSV) |
+
+관리 화면은 숨긴 것이지 잠근 것이 아닙니다. 주소를 아는 사람은 열 수 있습니다. 다만 저장된 응답이 없고, 붙여 넣거나 불러온 내용은 그 브라우저에서만 처리하므로 열어도 남의 데이터를 볼 수는 없습니다.
 
 ## 버전
 
@@ -38,7 +51,7 @@ npm run copy-doc   # 결과 문구 문서(docs/result-copy.md) 다시 만들기
 
 ## 배포(Vercel)
 
-`vercel.json`에 빌드 명령(`npm run build`), 결과 폴더(`dist`), 보안 헤더, 검색 노출 막기(`noindex`)가 들어 있습니다.
+`vercel.json`에 설치·빌드 명령(`npm ci`, `npm run build`), 결과 폴더(`dist`), 확장자 없는 주소(`/admin`), 보안 헤더, 검색 노출 막기(`noindex`)가 들어 있습니다.
 
 - GitHub 저장소를 Vercel에서 Import 하면 이후 push할 때마다 자동으로 배포됩니다.
 - 또는 내 컴퓨터에서: `npx vercel deploy dist --prod`

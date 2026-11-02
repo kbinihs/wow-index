@@ -26,10 +26,19 @@ function csp(): Plugin {
   };
 }
 
-export default defineConfig({
+/**
+ * 응답 화면(index.html)과 관리 화면(admin.html)을 따로 한 파일씩 만든다.
+ * singlefile은 입력 하나만 인라인할 수 있어서 두 번 빌드한다(`vite build`, `vite build --mode admin`).
+ * 관리 화면 코드(팀 화면, 파일럿 분석)는 응답 화면 파일에 들어가지 않는다.
+ */
+export default defineConfig(({ mode }) => ({
   base: './',
   esbuild: { jsx: 'automatic', jsxImportSource: 'preact' },
   plugins: [csp(), viteSingleFile()],
-  build: { target: 'es2020' },
+  build: {
+    target: 'es2020',
+    emptyOutDir: mode !== 'admin',
+    rollupOptions: { input: mode === 'admin' ? 'admin.html' : 'index.html' },
+  },
   test: { include: ['tests/**/*.test.ts'] },
-});
+}));
