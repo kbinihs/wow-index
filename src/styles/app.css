@@ -1251,13 +1251,18 @@ input[type='file'] {
   text-align: left;
   vertical-align: top;
 }
+/* 머리줄은 낱말 단위로 줄을 바꿔, 넓은 화면에서는 표가 가로로 밀리지 않게 한다 */
 .stat-table thead th {
   font-size: 13px;
   color: var(--text-3);
-  white-space: nowrap;
+  vertical-align: bottom;
+  overflow-wrap: normal;
 }
 .stat-table tbody th {
   font-weight: 400;
+}
+/* 문항 문장이 너무 좁게 꺾이지 않도록. 상황 분포 표의 'B1' 칸에는 주지 않는다 */
+.item-block .stat-table tbody th {
   min-width: 180px;
 }
 .stat-table td {
@@ -1511,6 +1516,34 @@ input[type='file'] {
   /* 종이에는 보낼 링크·코드가 없으므로 공유 카드 전체를 뺀다 */
   section[aria-labelledby='sec-share'] {
     display: none !important;
+  }
+  /* 점수 보기: 종이에서는 펼칠 수 없으므로 접혀 있어도 표를 싣고, 펼침 화살표는 뺀다 */
+  @supports selector(::details-content) {
+    .score-view::details-content {
+      content-visibility: visible;
+    }
+    .score-view > summary {
+      list-style: none;
+      cursor: auto;
+      font-weight: 700;
+    }
+    .score-view > summary::-webkit-details-marker {
+      display: none;
+    }
+  }
+  /* 접힌 내용을 펼쳐 실을 수 없는 브라우저에서는 누를 수 없는 제목만 남지 않게 통째로 뺀다 */
+  @supports not selector(::details-content) {
+    .score-view:not([open]) {
+      display: none;
+    }
+  }
+  /* 지도와 점수 표가 한 카드에 있어 한 쪽을 넘기 쉽다. 카드 안에서는 나뉘게 하되 지도와 표는 각각 통째로 둔다 */
+  section[aria-labelledby='sec-map'] {
+    break-inside: auto;
+  }
+  .chart,
+  .score-view {
+    break-inside: avoid;
   }
   /* 배경 그래픽을 끄고 인쇄해도 범례 색 칸과 인원 칩이 남도록 */
   .swatch,

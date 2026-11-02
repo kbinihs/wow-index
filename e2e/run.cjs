@@ -120,6 +120,10 @@ async function run(colorScheme) {
   await noHScroll(page, '결과');
   // 점수 보기: 접혀 있다가 열면 다섯 방식 표(합산 점수 순). 375px에서 표도 가로로 밀리지 않는다.
   check(!(await page.isVisible('.score-table')), '점수 보기는 처음에 접혀 있음');
+  // 종이에서는 펼칠 수 없으므로 인쇄할 때는 접혀 있어도 표가 실린다
+  await page.emulateMedia({ media: 'print' });
+  check(await page.isVisible('.score-table'), '인쇄에서는 접힌 점수 표도 실림');
+  await page.emulateMedia({ media: 'screen' });
   await page.click('.score-view summary:has-text("점수 보기")');
   await page.waitForSelector('.score-table', { state: 'visible' });
   const scoreRows = await page.$$eval('.score-table tbody tr', (trs) => trs.map((tr) => tr.innerText.replace(/\s+/g, ' ').trim()));
