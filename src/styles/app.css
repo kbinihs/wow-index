@@ -103,6 +103,10 @@ a {
 
 /* 넓은 화면에서도 머리줄 글자가 가운데 단(608px 글자 폭)의 왼쪽 끝과 맞도록 */
 .site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
   padding: 0 max(16px, env(safe-area-inset-right, 0px), calc((100% - 608px) / 2)) 0
@@ -117,6 +121,56 @@ a {
   text-decoration: none;
   font-size: 1.15rem;
 }
+/* ── 월드비전 로고 ─────────────────────────────────── */
+
+/* 높이만 정하고 너비는 비율대로. 밝은 면은 남색 글자 판, 다크 모드는 흰 글자 판 */
+.org-logo {
+  display: inline-flex;
+  flex-shrink: 0;
+  line-height: 0;
+}
+.org-logo img {
+  height: var(--logo-h, 22px);
+  width: auto;
+}
+.org-logo-light {
+  display: block;
+}
+.org-logo-dark {
+  display: none;
+}
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .org-logo-light {
+    display: none;
+  }
+  :root:not([data-theme='light']) .org-logo-dark {
+    display: block;
+  }
+}
+@media screen {
+  :root[data-theme='dark'] .org-logo-light {
+    display: none;
+  }
+  :root[data-theme='dark'] .org-logo-dark {
+    display: block;
+  }
+}
+.site-org {
+  --logo-h: 22px;
+}
+/* 첫 화면: 원호(오른쪽 위)와 겹치지 않게 왼쪽 위, 제목 위에 둔다 */
+.hero-org {
+  position: relative;
+  display: flex;
+  width: max-content;
+  margin: 0 0 28px;
+  --logo-h: 28px;
+}
+/* 인쇄물 머리. 화면에서는 숨긴다 */
+.print-brand {
+  display: none;
+}
+
 /* 관리 화면 머리줄 표시 */
 .site-badge {
   font-size: 12px;
@@ -186,7 +240,7 @@ a {
   position: relative;
   overflow: hidden;
   margin: -20px calc(-1 * max(16px, env(safe-area-inset-right, 0px))) 20px calc(-1 * max(16px, env(safe-area-inset-left, 0px)));
-  padding: 56px max(16px, env(safe-area-inset-right, 0px)) 28px max(16px, env(safe-area-inset-left, 0px));
+  padding: 24px max(16px, env(safe-area-inset-right, 0px)) 28px max(16px, env(safe-area-inset-left, 0px));
 }
 .horizon {
   position: absolute;
@@ -1444,6 +1498,7 @@ input[type='file'] {
 .horizon-arc-2 {
   animation-delay: 0.2s;
 }
+.hero-org,
 .hero-eyebrow,
 .hero-title,
 .hero-sub {
@@ -1505,6 +1560,20 @@ input[type='file'] {
   }
   body {
     background: #fff;
+  }
+  /* 머리줄 대신 맨 위에 제목 글자와 로고 */
+  .print-brand {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin: 0 0 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #bbbbbb;
+    font-size: 1.15rem;
+  }
+  .print-brand .org-logo {
+    --logo-h: 24px;
   }
   .page {
     max-width: none;

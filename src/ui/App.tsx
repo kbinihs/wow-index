@@ -4,7 +4,7 @@ import { navigate, useRoute, type Route } from '../router';
 import { Result } from './Result';
 import { Start } from './Start';
 import { Test } from './Test';
-import { Wordmark } from './Brand';
+import { OrgLogo, PrintBrand, Wordmark } from './Brand';
 import { Export } from './Export';
 import { Team } from './Team';
 
@@ -46,8 +46,10 @@ export function App() {
           <a href="#/" class="site-title">
             <Wordmark />
           </a>
+          <OrgLogo class="site-org" />
         </header>
       )}
+      {route.name !== 'start' && route.name !== 'pilot' && <PrintBrand />}
       {route.name === 'test' && <Test />}
       {route.name === 'result' && <Result key={route.code} code={route.code} />}
       {route.name === 'team' && <Team />}
