@@ -1,14 +1,18 @@
 import { ITEMS } from './data/items';
 import { SCENARIOS } from './data/scenarios';
 import { placementOf, type Progress } from './progress';
+import { bCounts } from './scoring';
 import { ARCHETYPES, type Archetype, type Picks } from './types';
 
 /**
  * 파일럿 응답 파일. 문항 분석용 원본이라 결과 링크·팀 코드와 섞지 않는다.
  * 이름·연락처는 담지 않는다. label은 진행자가 알려 준 참여 번호(선택).
  */
-/** v3: 응답 척도(끌림 → 맡고 싶음)와 문항·상황 문구를 고친 뒤. v2 이하 파일과 섞어 분석하지 않는다. */
-export const PILOT_VERSION = 3;
+/**
+ * v4: 상황 선택을 합산 점수에 넣어 주 유형(result)을 정한 뒤. 문항은 v3과 같지만 result가 다르게 정해져 v3 이하 파일과 섞어 분석하지 않는다.
+ * v3: 응답 척도(끌림 → 맡고 싶음)와 문항·상황 문구를 고친 뒤.
+ */
+export const PILOT_VERSION = 4;
 
 export interface PilotRecord {
   kind: 'wow-index-pilot';
@@ -212,18 +216,39 @@ export function coreCounts(records: readonly PilotRecord[]): Record<Archetype, n
   return out;
 }
 
+/** 점수가 가장 높은 원형(여럿이면 모두) */
+function topOf(score: Record<Archetype, number>): Archetype[] {
+  const hi = Math.max(...ARCHETYPES.map((a) => score[a]));
+  return ARCHETYPES.filter((a) => score[a] === hi);
+}
+
+/** 업무 선호(A)만으로 정한 1위: A 합계가 가장 높은 원형 */
+function aTop(r: PilotRecord): Archetype[] {
+  return topOf(Object.fromEntries(ARCHETYPES.map((a) => [a, archetypeSum(r, a)])) as Record<Archetype, number>);
+}
+
+/** 상황 선택(B)만으로 정한 1위: '가장 맡고 싶음' − '가장 맡고 싶지 않음' 횟수가 가장 많은 원형 */
+function bTop(r: PilotRecord): Archetype[] {
+  const { best, worst } = bCounts(r.b);
+  return topOf(Object.fromEntries(ARCHETYPES.map((a) => [a, best[a] - worst[a]])) as Record<Archetype, number>);
+}
+
 /**
- * 업무 선호(A)로 정한 주 유형이 상황 선택(B)에서 '가장 맡고 싶음'으로 가장 많이 고른 방식과 같은 참여자 수.
- * 가장 많이 고른 방식이 여럿이면 그중 하나와 같아도 같다고 센다.
+ * 방법 간 일치: A만으로 정한 1위와 B만으로 정한 1위가 같은 참여자 수.
+ * 어느 쪽이든 1위가 여럿이면 그중 하나만 같아도 같다고 센다. 결과(result)와 상관없이 원자료에서 계산한다.
  */
 export function abAgreement(records: readonly PilotRecord[]): { match: number; n: number } {
-  let match = 0;
-  for (const r of records) {
-    const best = Object.fromEntries(ARCHETYPES.map((a) => [a, 0])) as Record<Archetype, number>;
-    for (const c of r.b) best[c.best]++;
-    if (best[r.result.core] === Math.max(...ARCHETYPES.map((a) => best[a]))) match++;
-  }
+  const match = records.filter((r) => {
+    const b = bTop(r);
+    return aTop(r).some((a) => b.includes(a));
+  }).length;
   return { match, n: records.length };
+}
+
+/** B가 주 유형을 바꾼 참여자 수: 합산으로 정한 주 유형(result.core)이 A만으로 정한 1위(여럿이면 그 모두)에 들어 있지 않은 사람 */
+export function bInfluence(records: readonly PilotRecord[]): { changed: number; n: number } {
+  const changed = records.filter((r) => !aTop(r).includes(r.result.core)).length;
+  return { changed, n: records.length };
 }
 
 /** 상황마다 원형별로 '가장 맡고 싶음'·'가장 맡고 싶지 않음'을 고른 사람 수 */

@@ -1282,6 +1282,61 @@ input[type='file'] {
   color: var(--danger-ink);
 }
 
+/* ── 점수 보기(결과 화면) ─────────────────────────── */
+
+.score-view {
+  margin-top: 12px;
+  font-size: 14px;
+}
+.score-view summary {
+  cursor: pointer;
+  font-weight: 500;
+  padding-block: 12px;
+}
+/* 375px 화면에서도 가로로 밀리지 않게 숫자 칸은 좁게, 머리줄은 낱말 단위로 줄을 바꾼다 */
+.score-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+.score-table th,
+.score-table td {
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--grid);
+  vertical-align: middle;
+}
+.score-table thead th {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--text-3);
+  text-align: right;
+  vertical-align: bottom;
+  overflow-wrap: normal;
+}
+.score-table thead th:first-child {
+  text-align: left;
+}
+.score-table tbody th {
+  font-weight: 500;
+  text-align: left;
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+.score-table td {
+  text-align: right;
+  white-space: nowrap;
+}
+.score-table .score-total {
+  font-weight: 700;
+}
+.score-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 /* ── 문양 ─────────────────────────────────────────── */
 
 .crest {

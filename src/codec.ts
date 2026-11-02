@@ -6,8 +6,12 @@ import { ARCHETYPES, type Archetype, type Picks, type Summary } from './types';
  * 담는 것: 버전, 별명(선택), A 평균 5개, B 상황별 best/worst, 동점일 때 본인이 고른 것.
  * A 문항별 응답은 넣지 않는다.
  */
-/** v5: 응답 척도(끌림 → 맡고 싶음)와 문항·상황 문구를 고침. v4 이하 코드는 문항 뜻이 달라 열지 않는다. */
-export const CODE_VERSION = 5;
+/**
+ * v6: 상황 선택(가장 맡고 싶음·가장 맡고 싶지 않음)을 합산 점수에 넣어 순위를 정함. 코드 형식은 v5와 같지만,
+ * v5 이하는 같은 코드라도 결과가 달라질 수 있어 열지 않는다.
+ * v5: 응답 척도(끌림 → 맡고 싶음)와 문항·상황 문구를 고침.
+ */
+export const CODE_VERSION = 6;
 export const NICK_MAX = 20;
 
 interface Payload {
@@ -96,7 +100,7 @@ function toSummary(p: Record<string, unknown>): Summary | null {
   };
   if (validateSummary(summary)) return null;
   // 받은 코드만으로 주·보조 유형이 정해져야 한다
-  if (place(summary.aSum, bCounts(summary.b).best, picks).pending) return null;
+  if (place(summary.aSum, bCounts(summary.b), picks).pending) return null;
   return summary;
 }
 

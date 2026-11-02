@@ -58,7 +58,7 @@ export function typeDistribution(members: readonly Member[]): {
   const core = zero();
   const second = zero();
   const types = members.map((m) => {
-    const p = place(m.summary.aSum, bCounts(m.summary.b).best, m.summary.picks);
+    const p = place(m.summary.aSum, bCounts(m.summary.b), m.summary.picks);
     // 코드를 읽을 때 정해지지 않은 결과는 걸러지므로 여기서는 늘 정해져 있다
     const t = { core: p.core!, second: p.second! };
     core[t.core]++;

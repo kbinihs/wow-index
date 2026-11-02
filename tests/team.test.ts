@@ -57,6 +57,12 @@ describe('분포', () => {
     expect(d.core).toEqual({ P: 1, B: 1, S: 0, G: 0, M: 1 });
     expect(d.second).toEqual({ P: 0, B: 0, S: 1, G: 1, M: 1 });
   });
+
+  it('주·보조 유형은 상황 선택을 더한 합산 점수로 정한다', () => {
+    // A 합계는 B 14 > P 13이지만 합산은 P 16 > B 12
+    const flipped = makeSummary({ aSum: { P: 13, B: 14, S: 10, G: 9, M: 8 }, b: pairs('PB', 'PB', 'PM', 'SG', 'GM', 'MS') });
+    expect(typeDistribution([{ nick: null, summary: flipped }]).types).toEqual([{ core: 'P', second: 'B' }]);
+  });
 });
 
 describe('팀 구성과 다섯 방식의 균형', () => {

@@ -19,10 +19,11 @@ import {
   typeName,
   type Profile,
 } from '../data/profiles';
+import { SCORE_COLUMNS, SCORE_TABLE_CAPTION, SCORE_VIEW_SUMMARY, SCORE_VIEW_TEXT, scoreCell, worstCell } from '../data/scoreText';
 import { clearProgress, loadProgress, summaryOf } from '../progress';
 import { isPilotMode } from '../pilotMode';
 import { navigate } from '../router';
-import { bCounts, neededPicks, score } from '../scoring';
+import { bCounts, neededPicks, score, type Result as Scored } from '../scoring';
 import type { Archetype, Summary } from '../types';
 import { TypeMap } from './charts/TypeMap';
 import { Crest } from './Crest';
@@ -78,7 +79,7 @@ function ResultView({
   const s = second!;
   const pair = combo(c, s);
   // 실제로 동점이라 본인이 고른 자리만 알린다(받은 코드에 남은 선택은 여기서 거른다)
-  const picked = pickedText(neededPicks(summary.aSum, bCounts(summary.b).best, summary.picks));
+  const picked = pickedText(neededPicks(summary.aSum, bCounts(summary.b), summary.picks));
 
   const toShare = () => {
     const h = document.getElementById('sec-share');
@@ -123,6 +124,7 @@ function ResultView({
 
       <Section title="한눈에 보기" id="sec-map">
         <TypeMap placement={r.placement} />
+        <ScoreView r={r} />
       </Section>
 
       <Section title="이렇게 일합니다" id="sec-combo">
@@ -197,6 +199,50 @@ function ResultView({
 
       <footer class="disclaimer">{DISCLAIMER}</footer>
     </main>
+  );
+}
+
+/** 방식별 점수를 접어 둔 표. 합산 점수가 높은 순이고, 같으면 결과에서 정해진 자리 순서를 따른다. */
+function ScoreView({ r }: { r: Scored }) {
+  const p = r.placement;
+  const placed = [p.core!, p.second!, ...p.growth, ...p.partners];
+  // sort는 안정 정렬이라 합산 점수가 같으면 자리 순서가 남는다
+  const rows = [...placed].sort((x, y) => r.composite[y] - r.composite[x]);
+  return (
+    <details class="score-view">
+      <summary>{SCORE_VIEW_SUMMARY}</summary>
+      <p class="hint">{SCORE_VIEW_TEXT}</p>
+      <div class="table-wrap">
+        <table class="score-table">
+          <caption class="sr-only">{SCORE_TABLE_CAPTION}</caption>
+          <thead>
+            <tr>
+              <th scope="col">{SCORE_COLUMNS.name}</th>
+              <th scope="col">{SCORE_COLUMNS.aSum}</th>
+              <th scope="col">{SCORE_COLUMNS.best}</th>
+              <th scope="col">{SCORE_COLUMNS.worst}</th>
+              <th scope="col">{SCORE_COLUMNS.composite}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((a) => (
+              <tr key={a}>
+                <th scope="row">
+                  <span class="score-name">
+                    <Crest archetype={a} size={20} />
+                    {NAMES[a]}
+                  </span>
+                </th>
+                <td>{r.aSum[a]}</td>
+                <td>{r.best[a]}</td>
+                <td>{worstCell(r.worst[a])}</td>
+                <td class="score-total">{scoreCell(r.composite[a])}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </details>
   );
 }
 

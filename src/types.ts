@@ -10,7 +10,7 @@ export interface BChoice {
   worst: Archetype;
 }
 
-/** 1·2위가 A 평균과 B 횟수로도 갈리지 않을 때 본인이 고른 것 */
+/** 1·2위가 합산 점수, A 합계, '가장 맡고 싶음' 횟수로도 갈리지 않을 때 본인이 고른 것 */
 export interface Picks {
   core?: Archetype;
   second?: Archetype;

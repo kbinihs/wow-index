@@ -4,7 +4,7 @@ import type { Slot } from '../../scoring';
 import type { Archetype } from '../../types';
 import { Crest } from '../Crest';
 
-/** 1·2위가 A 평균과 B 횟수로도 갈리지 않을 때 본인이 고른다 */
+/** 1·2위가 합산 점수, A 합계, '가장 맡고 싶음' 횟수로도 갈리지 않을 때 본인이 고른다 */
 export function Pick({
   slot,
   candidates,

@@ -17,11 +17,13 @@ import {
   PROFILES,
   typeName,
 } from '../src/data/profiles';
-import { aSumsFromResponses, DELTA, neededPicks, place, rankGroups, score } from '../src/scoring';
+import { aSumsFromResponses, bCounts, compositeOf, DELTA, neededPicks, place, rankGroups, score } from '../src/scoring';
 import { ARCHETYPES } from '../src/types';
 import { EX1, EX1_RESPONSES, makeSummary, pairs, sums } from './fixtures';
 
 const zero = { P: 0, B: 0, S: 0, G: 0, M: 0 };
+/** A 합계(4–20)를 직접 적을 때 */
+const aSum = (P: number, B: number, S: number, G: number, M: number) => ({ P, B, S, G, M });
 
 describe('예시 1(4.7의 A·B)', () => {
   const r = score(EX1);
@@ -35,9 +37,16 @@ describe('예시 1(4.7의 A·B)', () => {
     expect(typeName('P', 'S')).toBe('Prototyper-Sweeper');
   });
 
-  it('주·보조 차이 0.25 < δ → 차이가 크지 않다는 문장, 다섯 방식은 고르지 않음', () => {
-    expect(DELTA).toBe(0.5);
-    expect(r.closePair).toBe(true);
+  it('합산 점수 = A 합계 + 가장 맡고 싶음 − 가장 맡고 싶지 않음', () => {
+    expect(r.best).toEqual({ P: 3, B: 1, S: 2, G: 0, M: 0 });
+    expect(r.worst).toEqual({ P: 0, B: 1, S: 1, G: 1, M: 3 });
+    expect(r.composite).toEqual({ P: 21, B: 12, S: 18, G: 10, M: 5 });
+    expect(r.means).toEqual({ P: 4.5, B: 3, S: 4.25, G: 2.75, M: 2 });
+  });
+
+  it('주·보조 합산 차이 3 ≥ δ(2) → 차이가 크다, 다섯 방식은 고르지 않음', () => {
+    expect(DELTA).toBe(2);
+    expect(r.closePair).toBe(false);
     expect(r.flat).toBe(false);
   });
 
@@ -55,18 +64,53 @@ describe('예시 1(4.7의 A·B)', () => {
 });
 
 describe('순위와 동점', () => {
-  it('A 합계 → B 가장 맡고 싶음 횟수, 둘 다 같으면 한 묶음', () => {
-    expect(rankGroups(sums(3, 3, 3, 3, 3), { P: 2, B: 2, S: 1, G: 1, M: 0 })).toEqual([['P', 'B'], ['S', 'G'], ['M']]);
-    expect(rankGroups(sums(4, 4, 2.5, 3.75, 2.25), { ...zero, B: 2, P: 1 })).toEqual([['B'], ['P'], ['G'], ['S'], ['M']]);
+  it('합산 점수 → A 합계 → 가장 맡고 싶음 횟수, 셋 다 같으면 한 묶음', () => {
+    const best = { P: 2, B: 2, S: 1, G: 1, M: 0 };
+    expect(rankGroups(sums(3, 3, 3, 3, 3), { best, worst: { ...zero, M: 4, S: 1, G: 1 } })).toEqual([['P', 'B'], ['S', 'G'], ['M']]);
+    expect(rankGroups(sums(4, 4, 2.5, 3.75, 2.25), { best: { ...zero, B: 2, P: 1 }, worst: zero })).toEqual([['B'], ['P'], ['G'], ['S'], ['M']]);
   });
 
-  it('A가 같으면 B 횟수로 주 유형이 갈린다(예시 3)', () => {
+  it('B가 A의 순위를 뒤집는다: A 합계 B 14 > P 13이어도 가장 맡고 싶음 P 3, 가장 맡고 싶지 않음 B 2면 P가 주 유형', () => {
+    const s = makeSummary({ aSum: aSum(13, 14, 10, 9, 8), b: pairs('PB', 'PB', 'PM', 'SG', 'GM', 'MS') });
+    const r = score(s);
+    expect(r.composite).toEqual({ P: 16, B: 12, S: 10, G: 9, M: 7 });
+    expect(r.placement).toEqual({ core: 'P', second: 'B', growth: ['S'], partners: ['G', 'M'], pending: null });
+  });
+
+  it('합산 점수가 같으면 A 합계가 높은 쪽이 앞선다', () => {
+    // P: 15 + 0 − 1 = 14, B: 13 + 1 − 0 = 14
+    const s = makeSummary({ aSum: aSum(15, 13, 10, 9, 8), b: pairs('BP', 'SG', 'GM', 'MS', 'SG', 'GM') });
+    const counts = bCounts(s.b);
+    expect(compositeOf(s.aSum, counts)).toMatchObject({ P: 14, B: 14 });
+    expect(rankGroups(s.aSum, counts)).toEqual([['P'], ['B'], ['S'], ['G'], ['M']]);
+    const r = score(s);
+    expect(r.placement).toMatchObject({ core: 'P', second: 'B', pending: null });
+    expect(r.closePair).toBe(true);
+  });
+
+  it('합산 점수와 A 합계가 같으면 가장 맡고 싶음 횟수가 많은 쪽이 앞선다', () => {
+    // P: 13 + 2 − 1 = 14, B: 13 + 1 − 0 = 14
+    const s = makeSummary({ aSum: aSum(13, 13, 10, 9, 8), b: pairs('PS', 'PG', 'BP', 'SM', 'GM', 'MS') });
+    const counts = bCounts(s.b);
+    expect(compositeOf(s.aSum, counts)).toMatchObject({ P: 14, B: 14 });
+    expect(rankGroups(s.aSum, counts)).toEqual([['P'], ['B'], ['S'], ['G'], ['M']]);
+    expect(score(s).placement).toMatchObject({ core: 'P', second: 'B', pending: null });
+  });
+
+  it('합산 점수, A 합계, 가장 맡고 싶음 횟수가 모두 같으면 본인이 고른다', () => {
+    // P: 13 + 2 − 1 = 14, B: 13 + 2 − 1 = 14
+    const s = makeSummary({ aSum: aSum(13, 13, 10, 9, 8), b: pairs('PS', 'PM', 'BS', 'BG', 'SP', 'GB') });
+    expect(score(s).placement.pending).toEqual({ slot: 'core', candidates: ['P', 'B'] });
+    expect(score({ ...s, picks: { core: 'B' } }).placement).toMatchObject({ core: 'B', second: 'P', pending: null });
+  });
+
+  it('A가 같으면 B 선택으로 주 유형이 갈린다(예시 3)', () => {
     const r = score(makeSummary({ aSum: sums(4, 4, 2.5, 3.75, 2.25), b: pairs('BM', 'BM', 'PS', 'SG', 'MP', 'GS') }));
     expect(r.placement).toEqual({ core: 'B', second: 'P', growth: ['G'], partners: ['S', 'M'], pending: null });
   });
 
   it('A·B 모두 같으면 본인이 고른다', () => {
-    const s = makeSummary({ aSum: sums(3, 3, 3, 3, 3), b: pairs('PM', 'PM', 'BS', 'BG', 'SM', 'GP') });
+    const s = makeSummary({ aSum: sums(3, 3, 3, 3, 3), b: pairs('PM', 'PM', 'BM', 'BM', 'SG', 'GS') });
     expect(score(s).placement.pending).toEqual({ slot: 'core', candidates: ['P', 'B'] });
     const r = score({ ...s, picks: { core: 'B' } });
     expect(r.placement).toEqual({ core: 'B', second: 'P', growth: ['S', 'G'], partners: ['M'], pending: null });
@@ -86,22 +130,36 @@ describe('순위와 동점', () => {
   });
 
   it('후보에 없는 선택은 무시한다', () => {
-    const s = makeSummary({ aSum: sums(3, 3, 3, 3, 3), b: pairs('PM', 'PM', 'BS', 'BG', 'SM', 'GP') });
+    const s = makeSummary({ aSum: sums(3, 3, 3, 3, 3), b: pairs('PM', 'PM', 'BM', 'BM', 'SG', 'GS') });
     expect(score({ ...s, picks: { core: 'M' } }).placement.pending?.slot).toBe('core');
   });
 
   it('3위가 여럿이면 모두 성장 방향, 그 아래가 없으면 짝 없음', () => {
     const r = score(makeSummary({ aSum: sums(3, 3, 3, 3, 3), b: pairs('PS', 'PG', 'PM', 'BS', 'BG', 'BM'), picks: { core: 'P' } }));
     expect(r.placement).toEqual({ core: 'P', second: 'B', growth: ['S', 'G', 'M'], partners: [], pending: null });
+    // 합산 P·B 15, S·G·M 10 → 최고·최저 차이 5라 고르게 나온 것은 아니다
+    expect(r.flat).toBe(false);
+  });
+
+  it('다섯 합산 점수의 최고·최저 차이가 δ 미만이면 고르게 나온 것', () => {
+    // 가장 맡고 싶음과 가장 맡고 싶지 않음이 원형마다 같아 합산이 모두 12
+    const r = score(makeSummary({ aSum: sums(3, 3, 3, 3, 3), b: pairs('PB', 'BP', 'PB', 'BP', 'SG', 'GS'), picks: { core: 'B' } }));
+    expect(r.composite).toEqual({ P: 12, B: 12, S: 12, G: 12, M: 12 });
+    expect(r.placement).toEqual({ core: 'B', second: 'P', growth: ['S', 'G'], partners: ['M'], pending: null });
     expect(r.flat).toBe(true);
+    // 합산 차이 1(< 2)이면 고르지 않아도 주·보조 차이는 작다
+    const near = score(makeSummary({ aSum: aSum(14, 13, 10, 9, 8), b: pairs('SG', 'GM', 'MS', 'SG', 'GM', 'MS') }));
+    expect(near.composite.P - near.composite.B).toBe(1);
+    expect(near.closePair).toBe(true);
+    expect(near.flat).toBe(false);
   });
 
   it('실제로 동점이 아닌 자리의 선택은 버린다', () => {
-    expect(neededPicks(EX1.aSum, { P: 3, B: 1, S: 2, G: 0, M: 0 }, { core: 'M', second: 'G' })).toEqual({});
-    const aSum = sums(3, 3, 3, 3, 3);
-    const best = { P: 2, B: 2, S: 1, G: 1, M: 0 };
-    expect(neededPicks(aSum, best, { core: 'B', second: 'G' })).toEqual({ core: 'B' });
-    expect(place(aSum, best, { core: 'B' }).second).toBe('P');
+    expect(neededPicks(EX1.aSum, bCounts(EX1.b), { core: 'M', second: 'G' })).toEqual({});
+    const flat = sums(3, 3, 3, 3, 3);
+    const counts = bCounts(pairs('PM', 'PM', 'BM', 'BM', 'SG', 'GS'));
+    expect(neededPicks(flat, counts, { core: 'B', second: 'G' })).toEqual({ core: 'B' });
+    expect(place(flat, counts, { core: 'B' }).second).toBe('P');
   });
 });
 

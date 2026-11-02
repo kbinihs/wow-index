@@ -13,6 +13,12 @@ const EX1_A = {
   A11: 4, A12: 4, A13: 3, A14: 3, A15: 3, A16: 2, A17: 2, A18: 2, A19: 2, A20: 2,
 };
 const EX1_B = ['PM', 'PM', 'PM', 'BS', 'SB', 'SG'];
+// A를 모두 3으로 답한 뒤의 B. 합산 점수는 문항 합계 + 가장 맡고 싶음 − 가장 맡고 싶지 않음이다.
+// 둘 동점: P·B를 가장 맡고 싶음·가장 맡고 싶지 않음으로 두 번씩, S·G도 한 번씩 서로 바꿔 골라 합산이 모두 12.
+// 가장 맡고 싶음 횟수가 P2·B2라 P·B가 주 유형 후보로 남고, 다섯 방식이 고르게 나온 결과가 된다.
+const TIED2_B = ['PB', 'BP', 'PB', 'BP', 'SG', 'GS'];
+// 셋 동점: 합산 P·B·S 14, 가장 맡고 싶음도 P2·B2·S2로 같다.
+const TIED3_B = ['PM', 'PM', 'BG', 'BG', 'SM', 'SM'];
 let failures = 0;
 const check = (ok, msg) => {
   console.log(`${ok ? 'PASS' : 'FAIL'}  ${msg}`);
@@ -112,12 +118,27 @@ async function run(colorScheme) {
   check(!text.includes('이 브라우저에 저장된 내 응답의 결과가 아니어서'), '내 결과로 표시');
   check((await page.$('#share-link')) === null, 'file://에서는 결과 링크 없이 코드만');
   await noHScroll(page, '결과');
+  // 점수 보기: 접혀 있다가 열면 다섯 방식 표(합산 점수 순). 375px에서 표도 가로로 밀리지 않는다.
+  check(!(await page.isVisible('.score-table')), '점수 보기는 처음에 접혀 있음');
+  await page.click('.score-view summary:has-text("점수 보기")');
+  await page.waitForSelector('.score-table', { state: 'visible' });
+  const scoreRows = await page.$$eval('.score-table tbody tr', (trs) => trs.map((tr) => tr.innerText.replace(/\s+/g, ' ').trim()));
+  check(
+    scoreRows.length === 5 &&
+      /^Prototyper 18 3 0 21$/.test(scoreRows[0]) &&
+      /^Sweeper 17 2 −1 18$/.test(scoreRows[1]) &&
+      /^Maintainer 8 0 −3 5$/.test(scoreRows[4]),
+    `점수 보기 표 5행, 합산 순 (${scoreRows.join(' / ')})`,
+  );
+  const tableFits = await page.$eval('.score-view .table-wrap', (el) => el.scrollWidth <= el.clientWidth);
+  check(tableFits, '점수 표가 375px 안에 들어감');
+  await noHScroll(page, '결과(점수 보기 열림)');
   await shot(page, `${colorScheme}-05-result`);
 
   // 결과에서 브라우저 뒤로: 끝낸 응답은 그대로 두고, 앞으로 오면 다시 내 결과
   await page.goBack();
   await page.waitForSelector('text=이미 끝낸 응답이 있습니다');
-  const stored = JSON.parse(await page.evaluate(() => localStorage.getItem('wa:progress:v5')));
+  const stored = JSON.parse(await page.evaluate(() => localStorage.getItem('wa:progress:v6')));
   check(stored !== null && stored.finishedAt !== null, '뒤로 가도 응답 유지');
   await page.goForward();
   await page.waitForSelector('.result-head');
@@ -126,7 +147,7 @@ async function run(colorScheme) {
     '앞으로 오면 다시 내 결과',
   );
 
-  // 동점: 다른 브라우저에서 A를 모두 3, B 가장 맡고 싶음이 P2·B2
+  // 동점: 다른 브라우저에서 A를 모두 3, B는 합산이 모두 같고 가장 맡고 싶음이 P2·B2
   {
     const ctx = await browser.newContext({ viewport: { width: 375, height: 812 }, colorScheme });
     await ctx.route(/^https?:/, (r) => r.abort());
@@ -134,7 +155,7 @@ async function run(colorScheme) {
     await p3.goto(FILE);
     await p3.click('text=시작하기');
     await answerA(p3, Object.fromEntries(Object.keys(EX1_A).map((k) => [k, 3])));
-    await answerB(p3, ['PM', 'PM', 'BS', 'BG', 'SM', 'GP']);
+    await answerB(p3, TIED2_B);
     await p3.waitForSelector('text=주 유형 고르기');
     const pickText = await p3.innerText('main');
     check(pickText.includes('Prototyper와 Builder의 점수가 같습니다.'), '동점 고르기 화면');
@@ -165,7 +186,7 @@ async function run(colorScheme) {
     await p4.goto(FILE);
     await p4.click('text=시작하기');
     await answerA(p4, Object.fromEntries(Object.keys(EX1_A).map((k) => [k, 3])));
-    await answerB(p4, ['PM', 'PM', 'BG', 'BG', 'SM', 'SM']);
+    await answerB(p4, TIED3_B);
     await p4.waitForSelector('text=주 유형 고르기');
     check((await p4.innerText('main')).includes('이 가운데 나와 가장 가깝다고'), '셋이 같을 때 고르기 문장');
     await p4.check('input[name="pick-core"][value="S"]');
@@ -291,6 +312,11 @@ async function run(colorScheme) {
   const an = await page.innerText('main');
   check(an.includes('형식이 맞지 않아 뺀 것: 1개'), '형식이 다른 파일 안내');
   check(an.includes('문항 분석') && an.includes('상황 선택 분포') && an.includes('크론바흐 알파'), '분석 화면 구성');
+  // 두 번째 파일은 P 문항만 낮춰 업무 선호 1위가 Sweeper인데 주 유형은 Prototyper로 남아 있다
+  check(
+    an.includes('업무 선호와 상황 선택의 1위가 같은 참여자: 1명 / 2명') && an.includes('상황 선택 때문에 주 유형이 달라진 참여자: 1명 / 2명'),
+    '방법 간 일치와 상황 선택이 바꾼 주 유형',
+  );
   await page.click('summary:has-text("CSV 내용 보기")');
   const csvText = await page.inputValue('textarea[aria-label="CSV 내용"]');
   check(csvText.split('\n').filter(Boolean).length === 3 && csvText.includes('P07') && csvText.includes('P08'), 'CSV 두 줄');

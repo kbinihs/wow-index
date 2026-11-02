@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { ITEMS } from '../src/data/items';
 import {
   abAgreement,
+  bInfluence,
   buildPilotRecord,
   coreCounts,
   cronbachAlpha,
@@ -16,7 +17,7 @@ import {
   type PilotRecord,
 } from '../src/pilot';
 import { newProgress, type Progress } from '../src/progress';
-import { EX1, EX1_RESPONSES } from './fixtures';
+import { EX1, EX1_RESPONSES, pairs } from './fixtures';
 
 const finished = (over: Partial<Progress> = {}): Progress => ({
   ...newProgress(7),
@@ -65,8 +66,10 @@ describe('응답 파일 읽기', () => {
     expect(parsePilotText(JSON.stringify({ ...r, a: { ...r.a, A01: 9 } })).records).toHaveLength(0);
   });
 
-  it('이전 버전(문항이 다른) 파일은 따로 센다', () => {
+  it('이전 버전(문항이나 계산 방식이 다른) 파일은 따로 센다', () => {
+    expect(r.v).toBe(4);
     expect(parsePilotText(JSON.stringify({ ...r, v: 2 }))).toEqual({ records: [], bad: 0, old: 1 });
+    expect(parsePilotText(JSON.stringify({ ...r, v: 3 }))).toEqual({ records: [], bad: 0, old: 1 });
   });
 
   it('칸이 빠지거나 깨진 파일은 오류 없이 뺀다', () => {
@@ -121,7 +124,21 @@ describe('통계', () => {
     expect(coreCounts(rs).P).toBe(3);
     expect(scenarioCounts(rs)[0]).toEqual({ id: 'B1', best: { P: 3, B: 0, S: 0, G: 0, M: 0 }, worst: { P: 0, B: 0, S: 0, G: 0, M: 3 } });
     expect(stats[0].items[0].cross).not.toBeNull();
+    // A만으로 1위 P(마지막은 P·S 동점), B만으로 1위 P(가장 맡고 싶음 3 − 가장 맡고 싶지 않음 0)
     expect(abAgreement(rs)).toEqual({ match: 3, n: 3 });
+    expect(bInfluence(rs)).toEqual({ changed: 0, n: 3 });
+  });
+
+  it('방법 간 일치와 B가 주 유형을 바꾼 사람', () => {
+    // A만으로는 P(18)가 1위인데, 상황 선택에서 S를 네 번 가장 맡고 싶다고 골라 합산 1위가 S(21)
+    const flipped = buildPilotRecord(finished({ b: pairs('SP', 'SP', 'SP', 'SM', 'BM', 'GM') }), null, NOW)!;
+    expect(flipped.result).toEqual({ core: 'S', second: 'P' });
+    expect(abAgreement([flipped])).toEqual({ match: 0, n: 1 });
+    expect(bInfluence([flipped])).toEqual({ changed: 1, n: 1 });
+    // 결과(result)와 상관없이 원자료로 센다
+    const base = buildPilotRecord(finished(), null, NOW)!;
+    expect(abAgreement([{ ...base, result: { core: 'M', second: 'G' } }])).toEqual({ match: 1, n: 1 });
+    expect(bInfluence([{ ...base, result: { core: 'M', second: 'G' } }])).toEqual({ changed: 1, n: 1 });
   });
 });
 

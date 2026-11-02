@@ -15,8 +15,8 @@ const payloadOf = (code: string) => {
 };
 const validPayload = () => payloadOf(encode(EX1));
 
-/** A·B가 모두 같아 주 유형을 골라야 하는 요약 */
-const TIED = makeSummary({ aSum: sums(3, 3, 3, 3, 3), b: pairs('PM', 'PM', 'BS', 'BG', 'SM', 'GP') });
+/** 합산 점수·A 합계·가장 맡고 싶음 횟수가 모두 같아 주 유형을 골라야 하는 요약 */
+const TIED = makeSummary({ aSum: sums(3, 3, 3, 3, 3), b: pairs('PM', 'PM', 'BM', 'BM', 'SG', 'GS') });
 
 describe('왕복', () => {
   it('인코딩 → 디코딩 결과가 같다', () => {
@@ -90,8 +90,13 @@ describe('버전', () => {
     expect(decode(rawCode({ ...validPayload(), v: 4 }))).toEqual({ ok: false, error: 'old-version' });
   });
 
+  it('v5(상황 선택을 합산에 넣기 전 계산)는 형식이 같아도 이전 버전', () => {
+    expect(validPayload().v).toBe(6);
+    expect(decode(rawCode({ ...validPayload(), v: 5 }))).toEqual({ ok: false, error: 'old-version' });
+  });
+
   it('더 새 버전은 따로 알린다', () => {
-    expect(decode(rawCode({ ...validPayload(), v: 6 }))).toEqual({ ok: false, error: 'unsupported-version' });
+    expect(decode(rawCode({ ...validPayload(), v: 7 }))).toEqual({ ok: false, error: 'unsupported-version' });
   });
 });
 

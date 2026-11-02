@@ -1,11 +1,13 @@
 import { ITEMS } from './data/items';
 import { ARCHETYPES, type Archetype, type BChoice, type Picks, type Summary } from './types';
 
-/** 평균 간격이 이 값보다 작으면 '차이가 크지 않다'고 본다. 이 값은 한 문항 두 칸, 또는 두 문항 한 칸씩. */
-export const DELTA = 0.5;
+/**
+ * 합산 점수 차이가 이 값보다 작으면 '차이가 크지 않다'고 본다(합산 점수 단위).
+ * 합산 점수는 문항 한 칸이 1점, 상황 선택 한 번이 1점이다. 2점은 문항 두 칸, 또는 한 상황의
+ * '가장 맡고 싶음'을 한 방식에서 다른 방식으로 옮겼을 때 두 방식 사이에 생기는 차이다.
+ */
+export const DELTA = 2;
 export const ITEMS_PER_ARCHETYPE = 4;
-/** 계산은 원형별 4문항 합계로 해서 부동소수 오차를 피한다. */
-const DELTA_SUM = DELTA * ITEMS_PER_ARCHETYPE;
 export const SCENARIO_COUNT = 6;
 
 function byArchetype<T>(f: (a: Archetype) => T): Record<Archetype, T> {
@@ -46,7 +48,13 @@ export function aSumsFromResponses(responses: Record<string, number>): Record<Ar
 
 // ── Part B ─────────────────────────────────────────────
 
-export function bCounts(b: readonly BChoice[]) {
+/** 여섯 상황에서 원형별로 '가장 맡고 싶음'·'가장 맡고 싶지 않음'으로 고른 횟수 */
+export interface BCounts {
+  best: Record<Archetype, number>;
+  worst: Record<Archetype, number>;
+}
+
+export function bCounts(b: readonly BChoice[]): BCounts {
   const best = byArchetype(() => 0);
   const worst = byArchetype(() => 0);
   for (const c of b) {
@@ -56,18 +64,29 @@ export function bCounts(b: readonly BChoice[]) {
   return { best, worst };
 }
 
+// ── 합산 ───────────────────────────────────────────────
+
+/** 합산 점수 = A 합계 + 가장 맡고 싶음 횟수 − 가장 맡고 싶지 않음 횟수(−2–26) */
+export function compositeOf(aSum: Record<Archetype, number>, { best, worst }: BCounts): Record<Archetype, number> {
+  return byArchetype((a) => aSum[a] + best[a] - worst[a]);
+}
+
 // ── 자리 정하기 ────────────────────────────────────────
 
 /**
- * 순위 묶음: A 합계가 높은 순. A 합계가 똑같을 때만 B '가장 맡고 싶음' 횟수가 많은 순.
- * 둘 다 같은 원형은 한 묶음(묶음 안은 P·B·S·G·M 순).
+ * 순위 묶음: 합산 점수가 높은 순. 같으면 A 합계가 높은 순, 그것도 같으면 '가장 맡고 싶음' 횟수가 많은 순.
+ * 셋 다 같은 원형은 한 묶음(묶음 안은 P·B·S·G·M 순).
  */
-export function rankGroups(aSum: Record<Archetype, number>, best: Record<Archetype, number>): Archetype[][] {
-  const sorted = [...ARCHETYPES].sort((x, y) => aSum[y] - aSum[x] || best[y] - best[x]);
+export function rankGroups(aSum: Record<Archetype, number>, counts: BCounts): Archetype[][] {
+  const total = compositeOf(aSum, counts);
+  const { best } = counts;
+  const cmp = (x: Archetype, y: Archetype) => total[y] - total[x] || aSum[y] - aSum[x] || best[y] - best[x];
+  // sort는 안정 정렬이라 같은 원형끼리는 P·B·S·G·M 순서가 남는다
+  const sorted = [...ARCHETYPES].sort(cmp);
   const groups: Archetype[][] = [];
   for (const a of sorted) {
     const last = groups[groups.length - 1];
-    if (last && aSum[last[0]] === aSum[a] && best[last[0]] === best[a]) last.push(a);
+    if (last && cmp(last[0], a) === 0) last.push(a);
     else groups.push([a]);
   }
   return groups;
@@ -89,9 +108,9 @@ export interface Placement {
 }
 
 /** 1위 주 유형, 2위 보조 유형, 3위 성장 방향, 나머지 채워 줄 짝 */
-export function place(aSum: Record<Archetype, number>, best: Record<Archetype, number>, picks: Picks): Placement {
+export function place(aSum: Record<Archetype, number>, counts: BCounts, picks: Picks): Placement {
   const out: Placement = { core: null, second: null, growth: [], partners: [], pending: null };
-  let rest = rankGroups(aSum, best);
+  let rest = rankGroups(aSum, counts);
 
   const take = (slot: Slot): Archetype | null => {
     const top = rest[0];
@@ -116,14 +135,14 @@ export function place(aSum: Record<Archetype, number>, best: Record<Archetype, n
 }
 
 /** 실제로 동점이라 골라야 했던 자리의 선택만 남긴다(답을 바꿔 동점이 풀렸으면 버림) */
-export function neededPicks(aSum: Record<Archetype, number>, best: Record<Archetype, number>, picks: Picks): Picks {
+export function neededPicks(aSum: Record<Archetype, number>, counts: BCounts, picks: Picks): Picks {
   const out: Picks = {};
-  const first = place(aSum, best, {});
+  const first = place(aSum, counts, {});
   if (first.pending?.slot === 'core') {
     if (!picks.core || !first.pending.candidates.includes(picks.core)) return out;
     out.core = picks.core;
   }
-  const second = place(aSum, best, out);
+  const second = place(aSum, counts, out);
   if (second.pending?.slot === 'second' && picks.second && second.pending.candidates.includes(picks.second)) {
     out.second = picks.second;
   }
@@ -133,13 +152,20 @@ export function neededPicks(aSum: Record<Archetype, number>, best: Record<Archet
 // ── 전체 ───────────────────────────────────────────────
 
 export interface Result {
+  /** 원형별 A 합계(4–20) */
   aSum: Record<Archetype, number>;
-  /** 원형별 평균(1–5) */
+  /** 원형별 A 평균(1–5) */
   means: Record<Archetype, number>;
+  /** 원형별 '가장 맡고 싶음' 횟수(0–6) */
+  best: Record<Archetype, number>;
+  /** 원형별 '가장 맡고 싶지 않음' 횟수(0–6) */
+  worst: Record<Archetype, number>;
+  /** 원형별 합산 점수(−2–26). 순위는 이 점수로 정한다. */
+  composite: Record<Archetype, number>;
   placement: Placement;
-  /** 주·보조 평균 차이가 δ 미만 */
+  /** 주·보조 합산 점수 차이가 DELTA 미만 */
   closePair: boolean;
-  /** 다섯 평균의 최고·최저 차이가 δ 미만 */
+  /** 다섯 합산 점수의 최고·최저 차이가 DELTA 미만 */
   flat: boolean;
 }
 
@@ -147,15 +173,20 @@ export function score(s: Summary): Result {
   const invalid = validateSummary(s);
   if (invalid) throw new RangeError(`응답 요약이 올바르지 않음: ${invalid}`);
 
-  const placement = place(s.aSum, bCounts(s.b).best, s.picks);
-  const sums = ARCHETYPES.map((a) => s.aSum[a]);
+  const counts = bCounts(s.b);
+  const composite = compositeOf(s.aSum, counts);
+  const placement = place(s.aSum, counts, s.picks);
+  const totals = ARCHETYPES.map((a) => composite[a]);
   const { core, second } = placement;
 
   return {
     aSum: { ...s.aSum },
     means: byArchetype((a) => s.aSum[a] / ITEMS_PER_ARCHETYPE),
+    best: counts.best,
+    worst: counts.worst,
+    composite,
     placement,
-    closePair: core !== null && second !== null && s.aSum[core] - s.aSum[second] < DELTA_SUM,
-    flat: Math.max(...sums) - Math.min(...sums) < DELTA_SUM,
+    closePair: core !== null && second !== null && composite[core] - composite[second] < DELTA,
+    flat: Math.max(...totals) - Math.min(...totals) < DELTA,
   };
 }

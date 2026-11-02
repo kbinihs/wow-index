@@ -1,27 +1,39 @@
-// 결과 문구를 코드(src/data/profiles.ts)에서 바로 뽑아 docs/result-copy.md로 쓴다. 화면 문구와 문서가 어긋나지 않게 한다.
+// 결과 문구를 코드(src/data/profiles.ts, src/data/scoreText.ts)에서 바로 뽑아 docs/result-copy.md로 쓴다. 화면 문구와 문서가 어긋나지 않게 한다.
 // 사용: npm run copy-doc
 import { build } from 'esbuild';
 import { writeFileSync } from 'node:fs';
 
-const out = await build({ entryPoints: ['src/data/profiles.ts'], bundle: true, format: 'esm', write: false, platform: 'node' });
-const mod = await import('data:text/javascript;base64,' + Buffer.from(out.outputFiles[0].text).toString('base64'));
+const load = async (entry) => {
+  const out = await build({ entryPoints: [entry], bundle: true, format: 'esm', write: false, platform: 'node' });
+  return import('data:text/javascript;base64,' + Buffer.from(out.outputFiles[0].text).toString('base64'));
+};
+const mod = await load('src/data/profiles.ts');
 const { NAMES, PROFILES, PROFILE_LABELS, COMBOS, GROWTH, GROWTH_LEAD, PARTNER, PARTNER_LEAD, PARTNER_LEAD_FLAT, PARTNER_NONE, CLOSE_PAIR_TEXT, FLAT_TEXT, leadText, pickText, pickedText } = mod;
+const { SCORE_VIEW_SUMMARY, SCORE_VIEW_TEXT, SCORE_COLUMNS } = await load('src/data/scoreText.ts');
 const A = ['P', 'B', 'S', 'G', 'M'];
 const cell = (v) => (Array.isArray(v) ? v.join('<br>') : v);
 
 const lines = [
   '# 결과 문구',
   '',
-  '이 문서는 `npm run copy-doc`으로 코드에서 만듭니다. 문구를 고칠 때는 `src/data/profiles.ts`를 고치고 다시 만드세요.',
+  '이 문서는 `npm run copy-doc`으로 코드에서 만듭니다. 문구를 고칠 때는 `src/data/profiles.ts`(점수 보기는 `src/data/scoreText.ts`)를 고치고 다시 만드세요.',
   '',
   '## 머리 문장',
   '',
   `- 예: ${leadText('P', 'S')}`,
-  `- 1·2위 차이가 0.5 미만이면 덧붙임(다섯 방식이 고르게 나온 때는 빼고): ${CLOSE_PAIR_TEXT}`,
-  `- 다섯 방식 차이가 0.5 미만이면 덧붙임: ${FLAT_TEXT}`,
+  `- 1·2위 합산 점수 차이가 2점 미만이면 덧붙임(다섯 방식이 고르게 나온 때는 빼고): ${CLOSE_PAIR_TEXT}`,
+  `- 다섯 방식 합산 점수의 최고·최저 차이가 2점 미만이면 덧붙임: ${FLAT_TEXT}`,
   `- 동점이라 직접 고른 자리가 있으면 덧붙임: ${pickedText({ core: 'P' })} / ${pickedText({ second: 'S' })} / ${pickedText({ core: 'P', second: 'S' })}`,
   `- 동점일 때(둘): ${pickText(['P', 'B'])}`,
   `- 동점일 때(셋 이상): ${pickText(['P', 'B', 'S'])}`,
+  '',
+  `## ${SCORE_VIEW_SUMMARY}`,
+  '',
+  "'한눈에 보기' 아래에 접혀 있습니다.",
+  '',
+  SCORE_VIEW_TEXT,
+  '',
+  `표의 열: ${Object.values(SCORE_COLUMNS).join(' | ')}`,
   '',
   '## 주 유형',
   '',

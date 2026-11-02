@@ -53,10 +53,10 @@ describe('진행 상태', () => {
     const b = [
       { best: 'P', worst: 'M' },
       { best: 'P', worst: 'M' },
-      { best: 'B', worst: 'S' },
-      { best: 'B', worst: 'G' },
-      { best: 'S', worst: 'M' },
-      { best: 'G', worst: 'P' },
+      { best: 'B', worst: 'M' },
+      { best: 'B', worst: 'M' },
+      { best: 'S', worst: 'G' },
+      { best: 'G', worst: 'S' },
     ] as Progress['b'];
     const p = filled({ a: allThree, b });
     expect(placementOf(p)?.pending).toEqual({ slot: 'core', candidates: ['P', 'B'] });
@@ -67,10 +67,15 @@ describe('진행 상태', () => {
 
 // 단위 테스트에는 브라우저 저장소가 없어 storage.ts의 메모리 사본으로 돈다
 describe('저장', () => {
-  it('깨졌거나 형식이 다른 기록은 읽지 않는다', () => {
-    saveItem('wa:progress:v5', '{not json');
+  it('이전 버전(v5) 기록은 이어 쓰지 않는다', () => {
+    saveItem('wa:progress:v5', JSON.stringify(newProgress(5)));
     expect(loadProgress()).toBeNull();
-    saveItem('wa:progress:v5', JSON.stringify({ v: 3, aOrder: [] }));
+  });
+
+  it('깨졌거나 형식이 다른 기록은 읽지 않는다', () => {
+    saveItem('wa:progress:v6', '{not json');
+    expect(loadProgress()).toBeNull();
+    saveItem('wa:progress:v6', JSON.stringify({ v: 3, aOrder: [] }));
     expect(loadProgress()).toBeNull();
     const p = newProgress(5);
     saveProgress(p);
@@ -80,10 +85,12 @@ describe('저장', () => {
   it('지우면 이전 버전이 남긴 기록도 함께 지운다', () => {
     saveItem('wa:progress:v3', 'old');
     saveItem('wa:progress:v4', 'old');
+    saveItem('wa:progress:v5', 'old');
     saveProgress(newProgress(5));
     clearProgress();
     expect(loadProgress()).toBeNull();
     expect(loadItem('wa:progress:v3')).toBeNull();
     expect(loadItem('wa:progress:v4')).toBeNull();
+    expect(loadItem('wa:progress:v5')).toBeNull();
   });
 });
