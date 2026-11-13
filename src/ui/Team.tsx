@@ -1,6 +1,6 @@
 import { Fragment } from 'preact';
-import { useMemo, useRef, useState } from 'preact/hooks';
-import { DECODE_ERROR_TEXT, normalizeTeam, TEAM_MAX } from '../codec';
+import { useMemo, useState } from 'preact/hooks';
+import { DECODE_ERROR_TEXT } from '../codec';
 import { NAMES, PROFILES, typeName } from '../data/profiles';
 import {
   BALANCE_EVEN,
@@ -14,8 +14,6 @@ import {
   FILE_HINT,
   FILE_LABEL,
   lineLabel,
-  LINK_HINT,
-  LINK_TITLE,
   PASTE_HINT,
   PASTE_LABEL,
   replacedText,
@@ -51,10 +49,11 @@ import {
   type TeamKey,
   type TeamSource,
 } from '../team';
-import { loadJoinedTeam, teamLink } from '../teamLink';
+import { resultHash } from '../router';
+import { loadJoinedTeam, loadMadeTeam } from '../teamLink';
 import { ARCHETYPES, type Archetype } from '../types';
 import { TeamPentagon } from './charts/TeamPentagon';
-import { announce, copyText, Section, shareOrCopy, useFocusHeading } from './common';
+import { announce, Section, useFocusHeading } from './common';
 import { Crest } from './Crest';
 
 /** 팀 화면. 붙여 넣은 코드는 이 화면의 메모리에만 있다. */
@@ -70,12 +69,6 @@ export function Team({ home = '처음 화면으로' }: { home?: string }) {
   /** 올린 대화 내보내기 파일들 */
   const [files, setFiles] = useState<TeamSource[]>([]);
   const [teamKey, setTeamKey] = useState<TeamKey>({ kind: 'all' });
-  /** 팀 링크를 만들 팀 이름. 이 브라우저가 팀 링크로 들어왔으면 그 이름 */
-  const [linkName, setLinkName] = useState(() => loadJoinedTeam() ?? '');
-  const [linkStatus, setLinkStatus] = useState('');
-  const linkRef = useRef<HTMLInputElement>(null);
-  const linkTeam = normalizeTeam(linkName);
-  const link = linkTeam ? teamLink(linkTeam) : '';
 
   const groups = useMemo(() => teamGroups(parsed?.members ?? []), [parsed]);
   const members = useMemo(() => filterByTeam(parsed?.members ?? [], teamKey), [parsed, teamKey]);
@@ -107,7 +100,8 @@ export function Team({ home = '처음 화면으로' }: { home?: string }) {
     setEmpty(false);
     setParsed(r);
     const g = teamGroups(r.members);
-    const key = defaultTeamKey(g, [linkTeam, loadJoinedTeam()]);
+    // 이 브라우저에서 팀 링크를 만든 팀(팀장), 아니면 팀 링크로 들어온 팀부터 보여 준다
+    const key = defaultTeamKey(g, [loadMadeTeam(), loadJoinedTeam()]);
     setTeamKey(key);
     // 불러온 사람이 없으면 아래 오류 목록(role=alert)이 읽히므로 따로 알리지 않는다
     if (r.members.length) {
@@ -132,16 +126,6 @@ export function Team({ home = '처음 화면으로' }: { home?: string }) {
     load(input, read);
   };
 
-  const copyLink = async () => {
-    setLinkStatus((await copyText(link, linkRef.current)) ? '팀 링크를 복사했습니다.' : '복사하지 못했습니다. 칸의 내용을 직접 복사해 주세요.');
-  };
-  const shareLink = async () => {
-    const r = await shareOrCopy(`WoW Index 팀 링크(${linkTeam})\n${link}`, linkRef.current);
-    setLinkStatus(
-      r === 'copied' ? '팀 링크를 복사했습니다. 팀 대화방에 붙여 넣어 주세요.' : r === 'failed' ? '보내지 못했습니다. 칸의 내용을 직접 복사해 주세요.' : '',
-    );
-  };
-
   /** 줄 목록을 글별로 묶어 '3, 5번째 줄' 또는 'chat.txt 3, 5번째 줄'로 */
   const lineList = (refs: LineRef[]) => {
     const by = new Map<string | null, number[]>();
@@ -157,43 +141,6 @@ export function Team({ home = '처음 화면으로' }: { home?: string }) {
         우리 팀 구성
       </h1>
       <p class="lead">{TEAM_INTRO}</p>
-
-      <section class="card team-link no-print" aria-labelledby="sec-link">
-        <h2 id="sec-link">{LINK_TITLE}</h2>
-        <p class="hint">{LINK_HINT}</p>
-        <div class="field">
-          <label for="team-name">팀 이름({TEAM_MAX}자까지)</label>
-          <input
-            id="team-name"
-            maxLength={TEAM_MAX}
-            value={linkName}
-            autoComplete="off"
-            onInput={(e) => {
-              setLinkName((e.target as HTMLInputElement).value);
-              setLinkStatus('');
-            }}
-          />
-        </div>
-        {linkTeam && (
-          <>
-            <div class="field">
-              <label for="team-link">팀 링크</label>
-              <div class="copy-row">
-                <input id="team-link" ref={linkRef} readOnly value={link} onFocus={(e) => (e.target as HTMLInputElement).select()} />
-                <button type="button" class="btn btn-secondary" onClick={copyLink}>
-                  복사
-                </button>
-              </div>
-            </div>
-            <button type="button" class="btn btn-secondary" onClick={shareLink}>
-              팀 대화방에 보내기
-            </button>
-          </>
-        )}
-        <p class="hint" role="status">
-          {linkStatus}
-        </p>
-      </section>
 
       <form class="card team-input no-print" onSubmit={loadCodes}>
         <label for="team-codes">{PASTE_LABEL}</label>
@@ -273,6 +220,7 @@ export function Team({ home = '처음 화면으로' }: { home?: string }) {
       {members.length > 0 && (
         <>
           <Section title={membersTitle} id="sec-members">
+            <p class="hint no-print">이름을 누르면 그 사람의 결과가 새 창으로 열립니다.</p>
             <label class="toggle no-print">
               <input type="checkbox" checked={hide} onChange={(e) => setHide((e.target as HTMLInputElement).checked)} />
               <span>별명 숨기기</span>
@@ -281,11 +229,12 @@ export function Team({ home = '처음 화면으로' }: { home?: string }) {
               {members.map((m, i) => (
                 <li key={i}>
                   <Crest archetype={types[i].core} size={32} />
-                  <span class="member-text">
+                  <a class="member-text member-link" href={resultHash(m.code)} target="_blank" rel="noopener">
                     <span class="member-name">{displayName(m, i, hide)}</span>{' '}
                     {showTeam && <span class="member-team">{m.team ?? TEAM_NONE_LABEL}</span>}{' '}
                     <span class="member-type">{typeName(types[i].core, types[i].second)}</span>
-                  </span>
+                    <span class="sr-only">(결과를 새 창으로 엽니다)</span>
+                  </a>
                 </li>
               ))}
             </ul>

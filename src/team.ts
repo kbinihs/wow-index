@@ -6,6 +6,8 @@ export interface Member {
   nick: string | null;
   /** 결과를 공유할 때 붙은 팀 이름(팀 링크로 들어왔거나 직접 적은 것) */
   team: string | null;
+  /** 받은 코드. 팀 화면에서 그 사람의 결과를 열 때 쓴다 */
+  code: string;
   summary: Summary;
 }
 
@@ -73,7 +75,7 @@ export function parseTeamSources(sources: readonly TeamSource[]): ParsedTeam {
         return;
       }
       seen.add(code);
-      const member: Member = { nick: r.nick, team: r.team, summary: r.summary };
+      const member: Member = { nick: r.nick, team: r.team, code, summary: r.summary };
       if (!r.nick) {
         out.members.push(member);
         return;

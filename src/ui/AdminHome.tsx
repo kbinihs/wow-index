@@ -1,6 +1,7 @@
 import { useRef, useState } from 'preact/hooks';
 import { publicBase } from '../teamLink';
 import { copyText, useFocusHeading } from './common';
+import { TeamLinkMaker } from './TeamLinkMaker';
 
 export function AdminHome() {
   const heading = useFocusHeading('admin');
@@ -30,6 +31,8 @@ export function AdminHome() {
           팀 화면 열기
         </a>
       </section>
+
+      <TeamLinkMaker />
 
       <section class="card entry-card">
         <h2>파일럿</h2>

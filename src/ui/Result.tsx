@@ -371,7 +371,7 @@ function Share({ summary, initialNick, initialTeam }: { summary: Summary; initia
             복사
           </button>
         </div>
-        <p class="hint">팀 구성을 볼 사람(팀장이나 진행자)에게 이 팀 코드를 보내 주세요. 처음 화면의 '받은 결과 보기'에 넣으면 이 결과를 다시 열 수 있습니다.</p>
+        <p class="hint">팀 구성을 볼 사람(팀장이나 진행자)에게 이 팀 코드를 보내 주세요. '팀 결과 모아 보기'에 넣고 이름을 누르면 이 결과를 다시 열 수 있습니다.</p>
       </div>
 
       {isWeb && (

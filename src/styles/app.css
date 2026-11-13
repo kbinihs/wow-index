@@ -360,15 +360,11 @@ input:not([type]),
   color: var(--text);
   font: inherit;
 }
-.field label,
-.code-form label {
+.field label {
   display: block;
   margin: 12px 0 4px;
   font-weight: 500;
   font-size: 14px;
-}
-.code-form .btn {
-  margin-top: 12px;
 }
 .copy-row {
   display: flex;
@@ -1085,9 +1081,24 @@ textarea {
   padding-left: 1.2em;
   font-size: 14px;
 }
-/* 팀 링크 만들기 */
-.team-link > .btn {
+/* 팀 링크 만들기: 작은 버튼, 누르면 아래에 펼쳐짐 */
+.team-link-maker {
+  margin: 16px 0;
+}
+.team-link-maker .team-link {
   margin-top: 12px;
+}
+.team-link-share {
+  margin-top: 12px;
+}
+/* 팀원 이름: 누르면 그 사람의 결과(새 창) */
+.member-link {
+  color: inherit;
+  text-decoration: none;
+}
+.member-link:hover .member-name,
+.member-link:focus-visible .member-name {
+  text-decoration: underline;
 }
 .team-pick-card .phase-pick {
   margin: 0;

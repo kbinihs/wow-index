@@ -16,6 +16,17 @@ export function saveJoinedTeam(team: string | null): void {
   else removeItem(KEY);
 }
 
+/** 이 브라우저에서 마지막으로 팀 링크를 만든 팀(팀장). 팀 화면에서 처음 보여 줄 팀으로 쓴다. 팀원 결과에는 붙지 않는다. */
+const MADE_KEY = 'wa:team-made';
+
+export const loadMadeTeam = (): string | null => normalizeTeam(loadItem(MADE_KEY));
+
+export function saveMadeTeam(team: string | null): void {
+  const t = normalizeTeam(team);
+  if (t) saveItem(MADE_KEY, t);
+  else removeItem(MADE_KEY);
+}
+
 export const teamLinkHash = (team: string): string => `#/t/${encodeURIComponent(team)}`;
 
 /** '#/t/…' 뒤의 팀 이름. 읽을 수 없으면 null */

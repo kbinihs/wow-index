@@ -1,8 +1,8 @@
 import { useState } from 'preact/hooks';
-import { decode, DECODE_ERROR_TEXT, encode } from '../codec';
+import { encode } from '../codec';
 import { DISCLAIMER } from '../data/profiles';
 import { clearProgress, hasAnswers, loadProgress, newProgress, saveProgress, summaryOf } from '../progress';
-import { extractCode, navigate, resultHash } from '../router';
+import { navigate, resultHash } from '../router';
 import { ARCHETYPES } from '../types';
 import { NAMES } from '../data/profiles';
 import { isPilotMode } from '../pilotMode';
@@ -10,13 +10,12 @@ import { loadJoinedTeam } from '../teamLink';
 import { PentaDeco, TITLE_SUB, Wordmark } from './Brand';
 import { useFocusHeading } from './common';
 import { Crest } from './Crest';
+import { TeamLinkMaker } from './TeamLinkMaker';
 
 export function Start() {
   const heading = useFocusHeading('start');
   const [saved, setSaved] = useState(loadProgress);
   const [confirmRestart, setConfirmRestart] = useState(false);
-  const [codeInput, setCodeInput] = useState('');
-  const [codeError, setCodeError] = useState<string | null>(null);
 
   const finished = saved?.finishedAt ? summaryOf(saved) : null;
   const joinedTeam = loadJoinedTeam();
@@ -27,18 +26,6 @@ export function Start() {
     saveProgress(newProgress());
     setSaved(null);
     navigate('#/test');
-  };
-
-  const openCode = (e: Event) => {
-    e.preventDefault();
-    const code = extractCode(codeInput);
-    const r = decode(code);
-    if (!r.ok) {
-      setCodeError(DECODE_ERROR_TEXT[r.error]);
-      return;
-    }
-    setCodeError(null);
-    navigate(resultHash(code));
   };
 
   return (
@@ -107,7 +94,7 @@ export function Start() {
         <div class="confirm" role="group" aria-label="다시 하기 확인">
           <p>
             {finished
-              ? '이 브라우저에 저장된 응답과 결과를 지우고 처음부터 시작합니다. 지금 결과를 남기려면 먼저 결과 화면에서 팀 코드를 복사해 두세요.'
+              ? '이 브라우저에 저장된 응답과 결과를 지우고 처음부터 시작합니다. 지금 결과를 남기려면 먼저 결과 화면에서 결과 링크를 복사해 두세요.'
               : '이 브라우저에 저장된 응답을 지우고 처음부터 시작합니다.'}
           </p>
           <button type="button" class="btn btn-danger" onClick={begin}>
@@ -119,28 +106,6 @@ export function Start() {
         </div>
       )}
 
-      <form class="card code-form" onSubmit={openCode}>
-        <h2>받은 결과 보기</h2>
-        <label for="code-input">팀 코드나 결과 링크</label>
-        <input
-          id="code-input"
-          value={codeInput}
-          autoComplete="off"
-          spellcheck={false}
-          aria-invalid={codeError ? 'true' : undefined}
-          aria-describedby={codeError ? 'code-error' : undefined}
-          onInput={(e) => setCodeInput((e.target as HTMLInputElement).value)}
-        />
-        {codeError && (
-          <p id="code-error" class="error" role="alert">
-            {codeError}
-          </p>
-        )}
-        <button type="submit" class="btn btn-secondary">
-          결과 열기
-        </button>
-      </form>
-
       <section class="card entry-card">
         <h2>팀 결과 모아 보기</h2>
         <p>팀원들이 보낸 팀 코드를 모아 우리 팀에 다섯 방식이 어떻게 섞여 있는지 봅니다. 팀이 맡은 사업의 단계에 필요한 조합과 비교해 볼 수도 있습니다.</p>
@@ -148,6 +113,8 @@ export function Start() {
           팀 화면 열기
         </a>
       </section>
+
+      <TeamLinkMaker />
 
       <footer class="disclaimer">{DISCLAIMER}</footer>
     </main>

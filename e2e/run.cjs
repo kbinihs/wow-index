@@ -106,6 +106,13 @@ async function run(colorScheme) {
   check(!startText.includes('파일럿') && (await page.locator('a[href="#/analysis"]').count()) === 0, '응답 화면에 파일럿 분석 링크 없음');
   check((await page.locator('.hero-deco .deco-ring').count()) === 3 && (await page.locator('.hero-deco .deco-dot').count()) === 5, '처음 화면 오각형 장식');
   check(startText.includes('팀 결과 모아 보기') && (await page.locator('a[href="#/team"]').count()) === 1, '응답 화면에서 팀 화면 열기');
+  check(!startText.includes('받은 결과 보기') && (await page.locator('#code-input').count()) === 0, "처음 화면에 '받은 결과 보기' 없음");
+  const linkBtn = page.locator('button:has-text("팀 링크 만들기")');
+  check((await linkBtn.getAttribute('aria-expanded')) === 'false' && (await page.locator('#team-name').count()) === 0, '팀 링크 만들기는 처음에 접힌 작은 버튼');
+  await linkBtn.click();
+  check((await page.inputValue('#team-name')) === '기획팀' && (await page.inputValue('#team-link')).endsWith('/index.html#/t/' + encodeURIComponent('기획팀')), '팀 링크 만들기: 들어온 팀 이름이 미리 채워짐');
+  await noHScroll(page, '시작(팀 링크 만들기 펼침)');
+  await linkBtn.click();
   await page.click('text=시작하기');
 
   await answerA(page, EX1_A, colorScheme, true);
@@ -228,14 +235,12 @@ async function run(colorScheme) {
     await ctx.close();
   }
 
-  // 받은 결과로 열기(다른 브라우저 = 저장소 없음)
+  // 받은 결과 링크로 열기(다른 브라우저 = 저장소 없음)
   const code = await page.inputValue('#share-code');
   const other = await browser.newContext({ viewport: { width: 375, height: 812 }, colorScheme });
   await other.route(/^https?:/, (r) => r.abort());
   const p2 = await other.newPage();
-  await p2.goto(FILE);
-  await p2.fill('#code-input', code);
-  await p2.click('button:has-text("결과 열기")');
+  await p2.goto(FILE + '#/result/' + code);
   await p2.waitForSelector('.result-head');
   const t2 = await p2.innerText('main');
   check(
@@ -249,17 +254,16 @@ async function run(colorScheme) {
   await page.goto(FILE + '#/result/' + code);
   await page.fill('#share-nick', '가');
   const myTeamCode = await page.inputValue('#share-code');
-  // 별명을 넣은 내 팀 코드를 처음 화면에서 다시 열어도 내 결과(공유 칸과 별명 유지)
+  // 별명을 넣은 내 결과 링크를 다시 열어도 내 결과(공유 칸과 별명 유지)
   await page.goto(FILE + '#/');
-  await page.fill('#code-input', myTeamCode);
-  await page.click('button:has-text("결과 열기")');
+  await page.goto(FILE + '#/result/' + myTeamCode);
   await page.waitForSelector('.result-head');
   check((await page.$('#share-code')) !== null && (await page.inputValue('#share-nick')) === '가', '내 팀 코드로 다시 열어도 내 결과');
   // 응답 화면에서도 팀 화면을 연다(돌아가기는 처음 화면)
   await page.goto(FILE + '#/team');
   await page.waitForSelector('#team-codes');
   check(await page.isVisible('a.btn:has-text("처음 화면으로")'), '응답 화면의 팀 화면');
-  check((await page.inputValue('#team-name')) === '기획팀', '팀 링크로 들어온 브라우저는 팀 이름이 미리 채워짐');
+  check((await page.locator('#team-name').count()) === 0, '팀 화면에는 팀 링크 만들기가 없음');
   // 카카오톡 '대화 내보내기' 파일을 올리면 바로 읽는다(대화 줄은 건너뜀)
   const kakaoExport = ['2026. 11. 13. 오후 3:12, 가 : WoW Index 결과 · 가 · 기획팀', myTeamCode, '2026. 11. 13. 오후 3:15, 나 : 저도 했어요', tiedCode].join('\n');
   await page.setInputFiles('#team-files', { name: 'kakao.txt', mimeType: 'text/plain', buffer: Buffer.from(kakaoExport) });
@@ -272,14 +276,15 @@ async function run(colorScheme) {
   await page.waitForSelector('h1:has-text("관리 화면")');
   check((await page.inputValue('#pilot-link')).endsWith('/index.html#/pilot'), '파일럿 참여 링크');
   check((await page.locator('a[href="#/team"]').count()) === 1 && (await page.locator('a[href="#/analysis"]').count()) === 1, '관리 화면에 팀·분석 링크');
+  // 팀 링크 만들기(작은 버튼): 관리 화면에서 만들어도 응답 화면 주소를 가리킨다
+  await page.click('button:has-text("팀 링크 만들기")');
+  await page.fill('#team-name', ' 기획팀 ');
+  check((await page.inputValue('#team-link')).endsWith('/index.html#/t/' + encodeURIComponent('기획팀')), '관리 화면에서 팀 링크 만들기');
   await noHScroll(page, '관리');
   await shot(page, `${colorScheme}-05b-admin`);
   await page.click('a[href="#/team"]');
   await page.waitForSelector('#team-codes');
   check(await page.isVisible('a.btn:has-text("관리 화면으로")'), '관리 화면의 팀 화면');
-  // 팀 링크 만들기: 관리 화면에서 만들어도 응답 화면 주소를 가리킨다
-  await page.fill('#team-name', ' 기획팀 ');
-  check((await page.inputValue('#team-link')).endsWith('/index.html#/t/' + encodeURIComponent('기획팀')), '팀 링크 만들기');
   // 대화방을 통째로 붙여 넣기: 대화 줄은 건너뛰고, 깨진 코드와 중복은 알린다
   const chat = [
     '2026년 11월 13일 금요일',
@@ -302,6 +307,11 @@ async function run(colorScheme) {
   await page.click('.team-pick .phase-option:has-text("모두")');
   const teamText = await page.innerText('main');
   check(teamText.includes('팀원 2명'), '모두 보기: 팀원 2명');
+  check(
+    (await page.locator('a.member-link[target="_blank"]').count()) === 2 &&
+      (await page.locator(`a.member-link[href="#/result/${myTeamCode}"]`).count()) === 1,
+    '팀원 이름을 누르면 그 사람의 결과(새 창)',
+  );
   check(/가\s*기획팀\s*Prototyper-Sweeper/.test(teamText) && /나\s*팀 이름 없음\s*Builder-Prototyper/.test(teamText), '팀원 유형 목록(모두 보기에서는 팀 이름도)');
   await page.check('text=별명 숨기기');
   const hidden = await page.innerText('section[aria-labelledby="sec-members"]');
@@ -374,11 +384,10 @@ async function run(colorScheme) {
   await noHScroll(page, '분석');
   await shot(page, `${colorScheme}-07-analysis`);
 
-  // 잘못된 코드
-  await page.goto(FILE + '#/');
-  await page.fill('#code-input', 'abc$');
-  await page.click('button:has-text("결과 열기")');
-  check(await page.isVisible('#code-error'), '잘못된 코드 안내');
+  // 잘못된 결과 링크
+  await page.goto(FILE + '#/result/abc$');
+  await page.waitForSelector('h1:has-text("결과를 열 수 없습니다")');
+  check(await page.isVisible('.banner[role="alert"]'), '잘못된 결과 링크 안내');
 
   check(errors.length === 0, `페이지 오류 없음 ${errors.join(' | ')}`);
   const nonFont = external.filter((u) => !/^https:\/\/fonts\.(googleapis|gstatic)\.com\//.test(u));

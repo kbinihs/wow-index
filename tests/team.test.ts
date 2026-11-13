@@ -32,6 +32,12 @@ describe('팀 코드 붙여 넣기', () => {
     expect(r.duplicates).toEqual([{ source: null, line: 5 }]);
   });
 
+  it('팀원마다 받은 코드를 남겨 팀 화면에서 그 사람의 결과를 열 수 있다', () => {
+    const a = encode(EX1, '가나');
+    const r = parseTeamCodes(`[가나] [오후 3:12] https://example.org/#/result/${a}`);
+    expect(r.members[0].code).toBe(a);
+  });
+
   it('메신저에서 복사한 줄(이름·시각이 앞에 붙은 줄)에서도 코드만 읽는다', () => {
     const a = encode(EX1, '가나');
     const b = encode(makeSummary());
@@ -108,7 +114,7 @@ describe('팀 코드 붙여 넣기', () => {
 });
 
 describe('팀별로 나눠 보기', () => {
-  const m = (nick: string, team: string | null): Member => ({ nick, team, summary: EX1 });
+  const m = (nick: string, team: string | null): Member => ({ nick, team, code: '', summary: EX1 });
   const ms = [m('a', '운영팀'), m('b', '기획팀'), m('c', null), m('d', '기획팀')];
 
   it('팀은 사람 많은 순, 팀 이름이 없는 코드는 맨 뒤', () => {
@@ -136,9 +142,9 @@ describe('팀별로 나눠 보기', () => {
 
 describe('분포', () => {
   const ms: Member[] = [
-    { nick: 'a', team: null, summary: EX1 },
-    { nick: 'b', team: null, summary: makeSummary({ aSum: sums(3, 3, 3, 3, 3), b: pairs('MP', 'MP', 'MP', 'BS', 'GB', 'GS'), picks: { core: 'M', second: 'G' } }) },
-    { nick: 'c', team: null, summary: makeSummary({ aSum: sums(2, 4.5, 2, 2, 4), b: pairs('BM', 'BS', 'SG', 'GM', 'MP', 'PB') }) },
+    { nick: 'a', team: null, code: '', summary: EX1 },
+    { nick: 'b', team: null, code: '', summary: makeSummary({ aSum: sums(3, 3, 3, 3, 3), b: pairs('MP', 'MP', 'MP', 'BS', 'GB', 'GS'), picks: { core: 'M', second: 'G' } }) },
+    { nick: 'c', team: null, code: '', summary: makeSummary({ aSum: sums(2, 4.5, 2, 2, 4), b: pairs('BM', 'BS', 'SG', 'GM', 'MP', 'PB') }) },
   ];
 
   it('팀원별 주·보조 유형과 원형별 사람 수(순위 없음)', () => {
@@ -155,14 +161,14 @@ describe('분포', () => {
   it('주·보조 유형은 상황 선택을 더한 합산 점수로 정한다', () => {
     // A 합계는 B 14 > P 13이지만 합산은 P 16 > B 12
     const flipped = makeSummary({ aSum: { P: 13, B: 14, S: 10, G: 9, M: 8 }, b: pairs('PB', 'PB', 'PM', 'SG', 'GM', 'MS') });
-    expect(typeDistribution([{ nick: null, team: null, summary: flipped }]).types).toEqual([{ core: 'P', second: 'B' }]);
+    expect(typeDistribution([{ nick: null, team: null, code: '', summary: flipped }]).types).toEqual([{ core: 'P', second: 'B' }]);
   });
 });
 
 describe('팀 구성과 다섯 방식의 균형', () => {
   const ms: Member[] = [
-    { nick: '가', team: null, summary: EX1 },
-    { nick: null, team: null, summary: makeSummary({ aSum: sums(2, 4.5, 2, 2, 4), b: pairs('BM', 'BS', 'SG', 'GM', 'MP', 'PB') }) },
+    { nick: '가', team: null, code: '', summary: EX1 },
+    { nick: null, team: null, code: '', summary: makeSummary({ aSum: sums(2, 4.5, 2, 2, 4), b: pairs('BM', 'BS', 'SG', 'GM', 'MP', 'PB') }) },
   ];
 
   it('표시 이름: 별명, 없으면 팀원 n, 숨기면 모두 팀원 n', () => {
