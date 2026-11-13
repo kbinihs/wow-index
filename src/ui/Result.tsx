@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'preact/hooks';
-import { decode, DECODE_ERROR_TEXT, encode, NICK_MAX } from '../codec';
+import { decode, DECODE_ERROR_TEXT, encode, NICK_MAX, normalizeTeam, TEAM_MAX } from '../codec';
 import {
   CLOSE_PAIR_TEXT,
   combo,
@@ -23,11 +23,12 @@ import { SCORE_COLUMNS, SCORE_TABLE_CAPTION, SCORE_VIEW_SUMMARY, SCORE_VIEW_TEXT
 import { clearProgress, loadProgress, summaryOf } from '../progress';
 import { isPilotMode } from '../pilotMode';
 import { navigate } from '../router';
+import { loadJoinedTeam, saveJoinedTeam } from '../teamLink';
 import { bCounts, neededPicks, score, type Result as Scored } from '../scoring';
 import type { Archetype, Summary } from '../types';
 import { TypeMap } from './charts/TypeMap';
 import { Crest } from './Crest';
-import { copyText, prefersReducedMotion, Section, useFocusHeading } from './common';
+import { copyText, prefersReducedMotion, Section, shareOrCopy, useFocusHeading } from './common';
 
 /** 이 브라우저에 저장된 내 응답의 결과와 같으면 '내 결과'. 별명은 비교하지 않는다. */
 function isOwn(summary: Summary): boolean {
@@ -58,17 +59,19 @@ export function Result({ code }: { code: string }) {
       </main>
     );
   }
-  return <ResultView summary={decoded.summary} nick={decoded.nick} own={isOwn(decoded.summary)} headingRef={heading} />;
+  return <ResultView summary={decoded.summary} nick={decoded.nick} team={decoded.team} own={isOwn(decoded.summary)} headingRef={heading} />;
 }
 
 function ResultView({
   summary,
   nick,
+  team,
   own,
   headingRef,
 }: {
   summary: Summary;
   nick: string | null;
+  team: string | null;
   own: boolean;
   headingRef: ReturnType<typeof useFocusHeading>;
 }) {
@@ -102,7 +105,10 @@ function ResultView({
           <Crest archetype={c} size={112} animate />
           <Crest archetype={s} size={52} animate />
         </div>
-        <p class="eyebrow">{own ? '나의 업무 유형' : nick ? `${nick} 님의 업무 유형` : '업무 유형'}</p>
+        <p class="eyebrow">
+          {own ? '나의 업무 유형' : nick ? `${nick} 님의 업무 유형` : '업무 유형'}
+          {!own && team && ` · ${team}`}
+        </p>
         <h1 ref={headingRef} tabIndex={-1} class="type-name">
           {typeName(c, s)}
         </h1>
@@ -185,7 +191,7 @@ function ResultView({
       </Section>
 
       {own ? (
-        <Share summary={summary} initialNick={nick ?? ''} />
+        <Share summary={summary} initialNick={nick ?? ''} initialTeam={team ?? loadJoinedTeam() ?? ''} />
       ) : (
         <div class="actions no-print">
           <button type="button" class="btn btn-secondary" onClick={() => window.print()}>
@@ -273,8 +279,9 @@ function ProfileRows({ archetype }: { archetype: Archetype }) {
   );
 }
 
-function Share({ summary, initialNick }: { summary: Summary; initialNick: string }) {
+function Share({ summary, initialNick, initialTeam }: { summary: Summary; initialNick: string; initialTeam: string }) {
   const [nick, setNick] = useState(initialNick);
+  const [team, setTeam] = useState(initialTeam);
   const [confirmClear, setConfirmClear] = useState(false);
   // 복사 결과는 화면에도 보여 준다(role=status라 스크린리더도 읽는다)
   const [status, setStatus] = useState('');
@@ -289,13 +296,26 @@ function Share({ summary, initialNick }: { summary: Summary; initialNick: string
     }
   })();
   const isWeb = /^https?:$/.test(window.location.protocol) && !framed;
-  const teamCode = encode(summary, nick);
+  const teamCode = encode(summary, nick, team);
   // 팀 코드와 결과 링크는 같은 코드를 담는다(별명 포함). 받는 사람은 어느 쪽을 받아도 팀 화면에 붙여 넣을 수 있다.
   const link = `${window.location.origin}${window.location.pathname}#/result/${teamCode}`;
 
   const copy = async (text: string, el: HTMLInputElement | null, what: string) => {
     const ok = await copyText(text, el);
     setStatus(ok ? `${what}를 복사했습니다.` : `${what}를 복사하지 못했습니다. 칸의 내용을 직접 복사해 주세요.`);
+  };
+
+  /** 팀 대화방에 보낼 글: 알아보기 쉬운 한 줄 + 결과 링크(파일로 열었으면 팀 코드) */
+  const sendToTeam = async () => {
+    const head = ['WoW Index 결과', nick.trim(), normalizeTeam(team)].filter(Boolean).join(' · ');
+    const r = await shareOrCopy(`${head}\n${isWeb ? link : teamCode}`, isWeb ? linkRef.current : codeRef.current);
+    setStatus(
+      r === 'copied'
+        ? '보낼 내용을 복사했습니다. 팀 대화방에 붙여 넣어 주세요.'
+        : r === 'failed'
+          ? '보내지 못했습니다. 아래 칸의 내용을 직접 복사해 보내 주세요.'
+          : '',
+    );
   };
 
   const clear = () => {
@@ -306,7 +326,7 @@ function Share({ summary, initialNick }: { summary: Summary; initialNick: string
   return (
     <Section title="공유" id="sec-share">
       <p class="notice" role="note">
-        팀 코드나 결과 링크를 다른 사람에게 보내면 내 결과 요약과 아래에 적은 별명이 함께 전달됩니다. 결과 요약에는 다섯 방식의 문항 점수와 상황마다 고른 역할이 들어 있고, 문항별 응답은 들어 있지 않습니다.
+        팀 코드나 결과 링크를 다른 사람에게 보내면 내 결과 요약과 아래에 적은 별명·팀 이름이 함께 전달됩니다. 결과 요약에는 다섯 방식의 문항 점수와 상황마다 고른 역할이 들어 있고, 문항별 응답은 들어 있지 않습니다.
       </p>
 
       <div class="field no-print">
@@ -316,6 +336,32 @@ function Share({ summary, initialNick }: { summary: Summary; initialNick: string
             setStatus('');
           }} />
       </div>
+
+      <div class="field no-print">
+        <label for="share-team">팀 이름(선택, {TEAM_MAX}자까지)</label>
+        <input
+          id="share-team"
+          maxLength={TEAM_MAX}
+          value={team}
+          aria-describedby="share-team-hint"
+          onInput={(e) => {
+            const v = (e.target as HTMLInputElement).value;
+            setTeam(v);
+            saveJoinedTeam(v);
+            setStatus('');
+          }}
+        />
+        <p class="hint" id="share-team-hint">
+          팀 링크로 들어왔다면 팀 이름이 미리 채워져 있습니다. 팀장은 팀 이름으로 팀원 결과를 골라 모읍니다.
+        </p>
+      </div>
+
+      <div class="actions no-print">
+        <button type="button" class="btn btn-primary" onClick={sendToTeam}>
+          팀 대화방에 보내기
+        </button>
+      </div>
+      <p class="hint no-print">휴대폰에서는 공유 창이 열리고, 공유 창이 없으면 보낼 내용을 복사합니다. 직접 복사하려면 아래 칸을 쓰세요.</p>
 
       <div class="field no-print">
         <label for="share-code">팀 코드</label>

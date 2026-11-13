@@ -3,7 +3,37 @@ import type { Archetype } from '../types';
 import { NAMES } from './profiles';
 
 export const TEAM_INTRO =
-  '팀원들이 보낸 팀 코드나 결과 링크를 한 줄에 하나씩 붙여 넣으세요. 붙여 넣은 내용은 이 화면에서만 쓰고 어디에도 저장하지 않습니다. 화면을 닫으면 사라지니, 남기려면 인쇄해 두세요.';
+  '팀원들이 보낸 팀 코드나 결과 링크를 모아 팀 구성을 봅니다. 붙여 넣거나 올린 내용은 이 화면에서만 쓰고 어디에도 저장하지 않습니다. 화면을 닫으면 사라지니, 남기려면 인쇄해 두세요.';
+
+// ── 팀 링크 ────────────────────────────────────────────
+
+export const LINK_TITLE = '팀원에게 보낼 팀 링크';
+export const LINK_HINT =
+  '팀 이름을 적으면 링크가 만들어집니다. 이 링크로 시작한 팀원은 결과에 팀 이름이 붙습니다. 팀원이 결과 화면에서 \'팀 대화방에 보내기\'를 누르면, 그 대화방 내용을 아래에 통째로 붙여 넣어 모을 수 있습니다.';
+
+// ── 모으기 ─────────────────────────────────────────────
+
+export const PASTE_LABEL = '팀 코드, 결과 링크, 또는 대화방 내용';
+export const PASTE_HINT = '대화방 내용을 통째로 복사해 붙여 넣어도 됩니다. 코드가 없는 줄(인사말, 이름, 시각)은 건너뜁니다.';
+export const FILE_LABEL = '대화 내보내기 파일 올리기(.txt)';
+export const FILE_HINT = '카카오톡의 \'대화 내보내기\'로 저장한 파일을 올리면 그 안의 코드를 모두 읽습니다. 파일은 이 화면에서만 읽습니다.';
+
+/** '7번째 줄', 'chat.txt 7번째 줄', '3, 5번째 줄' */
+export const lineLabel = (source: string | null, line: number | number[]) => {
+  const n = Array.isArray(line) ? line.join(', ') : line;
+  return source ? `${source} ${n}번째 줄` : `${n}번째 줄`;
+};
+
+export const replacedText = (nick: string, count: number, used: string) =>
+  `'${nick}'의 코드가 ${count}개라 마지막 것(${used})만 썼습니다.`;
+
+export const skippedText = (n: number) => `코드가 없는 줄 ${n}개는 건너뛰었습니다.`;
+
+// ── 팀 고르기 ──────────────────────────────────────────
+
+export const TEAM_PICK_QUESTION = '어느 팀을 볼까요?';
+export const TEAM_NONE_LABEL = '팀 이름 없음';
+export const TEAM_ALL_LABEL = '모두';
 
 export const BALANCE_TITLE = '다섯 방식의 균형';
 export const BALANCE_HINT = '꼭짓점이 바깥에 있을수록 그 방식을 주·보조 유형으로 가진 팀원이 많습니다.';

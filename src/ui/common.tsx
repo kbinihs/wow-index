@@ -61,6 +61,27 @@ export async function copyText(text: string, fallbackInput?: HTMLInputElement | 
   }
 }
 
+/**
+ * 휴대폰·PC의 공유 창(카카오톡, 메신저, 메일 등)으로 보낸다. 공유 창이 없거나 막혀 있으면 복사한다.
+ * 'shared': 공유 창에서 보냄, 'copied': 대신 복사함, 'cancelled': 공유 창을 닫음, 'failed': 둘 다 안 됨
+ */
+export async function shareOrCopy(
+  text: string,
+  fallbackInput?: HTMLInputElement | HTMLTextAreaElement | null,
+): Promise<'shared' | 'copied' | 'cancelled' | 'failed'> {
+  const nav = navigator as Navigator & { share?: (data: { text?: string }) => Promise<void> };
+  if (typeof nav.share === 'function') {
+    try {
+      await nav.share({ text });
+      return 'shared';
+    } catch (e) {
+      if ((e as { name?: string } | null)?.name === 'AbortError') return 'cancelled';
+      // 미리보기 안 등 공유가 막힌 곳에서는 복사로 넘어간다
+    }
+  }
+  return (await copyText(text, fallbackInput)) ? 'copied' : 'failed';
+}
+
 export function Section({ title, children, id }: { title: string; children: ComponentChildren; id?: string }) {
   return (
     <section class="card" aria-labelledby={id}>

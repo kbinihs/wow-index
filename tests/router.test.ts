@@ -12,6 +12,12 @@ describe('응답 화면과 관리 화면의 주소', () => {
     expect(parseHash('')).toEqual({ name: 'start' });
   });
 
+  it('팀 링크(#/t/팀이름)는 팀 이름을 읽고, 비었거나 깨졌으면 처음 화면', () => {
+    expect(parseHash(`#/t/${encodeURIComponent(' 기획팀 ')}`)).toEqual({ name: 'join', team: '기획팀' });
+    expect(parseHash('#/t/%20%20')).toEqual({ name: 'start' });
+    expect(parseHash('#/t/%E0%A4%A')).toEqual({ name: 'start' });
+  });
+
   it('관리 화면은 팀 화면과 파일럿 분석만 연다', () => {
     expect(parseAdminHash('')).toEqual({ name: 'home' });
     expect(parseAdminHash('#/team')).toEqual({ name: 'team' });

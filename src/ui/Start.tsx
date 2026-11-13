@@ -6,6 +6,7 @@ import { extractCode, navigate, resultHash } from '../router';
 import { ARCHETYPES } from '../types';
 import { NAMES } from '../data/profiles';
 import { isPilotMode } from '../pilotMode';
+import { loadJoinedTeam } from '../teamLink';
 import { PentaDeco, TITLE_SUB, Wordmark } from './Brand';
 import { useFocusHeading } from './common';
 import { Crest } from './Crest';
@@ -18,6 +19,7 @@ export function Start() {
   const [codeError, setCodeError] = useState<string | null>(null);
 
   const finished = saved?.finishedAt ? summaryOf(saved) : null;
+  const joinedTeam = loadJoinedTeam();
   const inProgress = saved && !saved.finishedAt && hasAnswers(saved);
 
   const begin = () => {
@@ -65,6 +67,11 @@ export function Start() {
         <li>응답은 이 브라우저 안에서만 처리하고 서버로 보내지 않습니다.</li>
         <li>중간에 창을 닫아도 이 브라우저에 저장되어 이어서 할 수 있습니다.</li>
       </ul>
+      {joinedTeam && (
+        <p class="notice" role="note">
+          팀 링크로 들어왔습니다(팀 이름: {joinedTeam}). 결과 화면에서 '팀 대화방에 보내기'를 누르면 팀 이름이 붙어 전달되어, 팀장이 팀원 결과를 한꺼번에 모을 수 있습니다.
+        </p>
+      )}
       {isPilotMode() && (
         <p class="notice" role="note">
           파일럿 참여 링크로 들어왔습니다. 응답을 마치면 결과 화면에서 응답 파일을 내보낼 수 있습니다.

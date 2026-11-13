@@ -1063,6 +1063,40 @@ textarea {
 .team-input .btn {
   margin-top: 12px;
 }
+.team-input .field {
+  margin-top: 12px;
+}
+/* 올린 파일 이름은 길 수 있어 어디서든 줄을 바꾼다 */
+.file-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 0;
+  font-size: 14px;
+  color: var(--text-2);
+  overflow-wrap: anywhere;
+}
+.team-input .file-list .btn {
+  margin-top: 0;
+}
+.team-notes {
+  margin: 8px 0 0;
+  padding-left: 1.2em;
+  font-size: 14px;
+}
+/* 팀 링크 만들기 */
+.team-link > .btn {
+  margin-top: 12px;
+}
+.team-pick-card .phase-pick {
+  margin: 0;
+}
+.member-team {
+  font-size: 13px;
+  color: var(--text-3);
+  margin-right: 8px;
+}
 .team-problems {
   margin: 12px 0 0;
   padding-left: 1.2em;

@@ -96,7 +96,10 @@ async function run(colorScheme) {
   page.on('pageerror', (e) => errors.push(String(e)));
 
   console.log(`\n── ${colorScheme} ──`);
-  await page.goto(FILE);
+  // 팀장이 보낸 팀 링크로 시작: 팀 이름을 기억하고 처음 화면으로 바뀐다
+  await page.goto(FILE + '#/t/' + encodeURIComponent('기획팀'));
+  await page.waitForSelector('.notice:has-text("팀 링크로 들어왔습니다(팀 이름: 기획팀)")');
+  check((await page.url()).endsWith('#/'), '팀 링크는 처음 화면으로 바뀜');
   await shot(page, `${colorScheme}-00-start`);
   await noHScroll(page, '시작');
   const startText = await page.innerText('main');
@@ -123,6 +126,12 @@ async function run(colorScheme) {
   check((await page.$('.type-map svg')) !== null, '다섯 방식 지도');
   check(!text.includes('이 브라우저에 저장된 내 응답의 결과가 아니어서'), '내 결과로 표시');
   check((await page.$('#share-link')) === null, 'file://에서는 결과 링크 없이 코드만');
+  check((await page.inputValue('#share-team')) === '기획팀', '팀 링크로 들어오면 결과의 팀 이름이 미리 채워짐');
+  await page.click('button:has-text("팀 대화방에 보내기")');
+  const statusSel = 'section[aria-labelledby="sec-share"] p[role="status"]';
+  await page.waitForFunction((sel) => (document.querySelector(sel)?.textContent ?? '').trim().length > 0, statusSel, { timeout: 5000 }).catch(() => {});
+  const sendStatus = await page.innerText(statusSel);
+  check(/복사했습니다|보내지 못했습니다/.test(sendStatus), `팀 대화방에 보내기: 공유 창이 없으면 복사로 (${sendStatus.trim()})`);
   await noHScroll(page, '결과');
   // 점수 보기: 접혀 있다가 열면 다섯 방식 표(합산 점수 순). 375px에서 표도 가로로 밀리지 않는다.
   check(!(await page.isVisible('.score-table')), '점수 보기는 처음에 접혀 있음');
@@ -250,6 +259,14 @@ async function run(colorScheme) {
   await page.goto(FILE + '#/team');
   await page.waitForSelector('#team-codes');
   check(await page.isVisible('a.btn:has-text("처음 화면으로")'), '응답 화면의 팀 화면');
+  check((await page.inputValue('#team-name')) === '기획팀', '팀 링크로 들어온 브라우저는 팀 이름이 미리 채워짐');
+  // 카카오톡 '대화 내보내기' 파일을 올리면 바로 읽는다(대화 줄은 건너뜀)
+  const kakaoExport = ['2026. 11. 13. 오후 3:12, 가 : WoW Index 결과 · 가 · 기획팀', myTeamCode, '2026. 11. 13. 오후 3:15, 나 : 저도 했어요', tiedCode].join('\n');
+  await page.setInputFiles('#team-files', { name: 'kakao.txt', mimeType: 'text/plain', buffer: Buffer.from(kakaoExport) });
+  await page.waitForSelector('section[aria-labelledby="sec-members"]');
+  const fileText = await page.innerText('main');
+  check(fileText.includes('올린 파일: kakao.txt') && fileText.includes('코드가 없는 줄 2개는 건너뛰었습니다.') && !fileText.includes('번째 줄('), '대화 내보내기 파일 읽기');
+  check(fileText.includes('기획팀 · 팀원 1명') && (await page.locator('.team-pick .phase-option').count()) === 3, '여러 팀이면 이 브라우저의 팀(기획팀)부터 보여 줌');
   // 관리 화면
   await page.goto(ADMIN);
   await page.waitForSelector('h1:has-text("관리 화면")');
@@ -260,12 +277,32 @@ async function run(colorScheme) {
   await page.click('a[href="#/team"]');
   await page.waitForSelector('#team-codes');
   check(await page.isVisible('a.btn:has-text("관리 화면으로")'), '관리 화면의 팀 화면');
-  await page.fill('#team-codes', [myTeamCode, tiedCode, 'not-a-code!', myTeamCode].join('\n'));
+  // 팀 링크 만들기: 관리 화면에서 만들어도 응답 화면 주소를 가리킨다
+  await page.fill('#team-name', ' 기획팀 ');
+  check((await page.inputValue('#team-link')).endsWith('/index.html#/t/' + encodeURIComponent('기획팀')), '팀 링크 만들기');
+  // 대화방을 통째로 붙여 넣기: 대화 줄은 건너뛰고, 깨진 코드와 중복은 알린다
+  const chat = [
+    '2026년 11월 13일 금요일',
+    '[가] [오후 3:12] WoW Index 결과 · 가 · 기획팀',
+    `[가] [오후 3:12] ${myTeamCode}`,
+    '[나] [오후 3:15] 저도 했어요',
+    `[나] [오후 3:15] ${tiedCode}`,
+    myTeamCode.slice(0, 20),
+    `[가] [오후 3:20] ${myTeamCode}`,
+  ].join('\n');
+  await page.fill('#team-codes', chat);
   await page.click('button:has-text("불러오기")');
+  await page.waitForSelector('section[aria-labelledby="sec-members"]');
+  const chatText = await page.innerText('main');
+  check(
+    chatText.includes('6번째 줄(') && chatText.includes('7번째 줄은 앞의 코드와 같아 뺐습니다.') && chatText.includes('코드가 없는 줄 3개는 건너뛰었습니다.') && !/[1245]번째 줄\(/.test(chatText),
+    '대화방 통째 붙여 넣기: 대화 줄 건너뜀, 깨진 코드·중복 안내',
+  );
+  check(chatText.includes('기획팀 · 팀원 1명') && /기획팀\s*1명/.test(chatText) && /팀 이름 없음\s*1명/.test(chatText) && /모두\s*2명/.test(chatText), '팀 고르기(기획팀 1명, 팀 이름 없음 1명, 모두 2명)');
+  await page.click('.team-pick .phase-option:has-text("모두")');
   const teamText = await page.innerText('main');
-  check(teamText.includes('팀원 2명'), '팀원 2명 불러옴');
-  check(teamText.includes('3번째 줄(not-a-code!)') && teamText.includes('4번째 줄은 앞의 코드와 같아 뺐습니다.'), '잘못된 줄·중복 안내');
-  check(/가\s*Prototyper-Sweeper/.test(teamText) && /나\s*Builder-Prototyper/.test(teamText), '팀원 유형 목록');
+  check(teamText.includes('팀원 2명'), '모두 보기: 팀원 2명');
+  check(/가\s*기획팀\s*Prototyper-Sweeper/.test(teamText) && /나\s*팀 이름 없음\s*Builder-Prototyper/.test(teamText), '팀원 유형 목록(모두 보기에서는 팀 이름도)');
   await page.check('text=별명 숨기기');
   const hidden = await page.innerText('section[aria-labelledby="sec-members"]');
   check(hidden.includes('팀원 1') && !/\n가\n/.test(hidden), '별명 숨기기');
@@ -290,7 +327,7 @@ async function run(colorScheme) {
   await page.fill('#team-codes', '');
   await page.click('button:has-text("불러오기")');
   const emptyText = await page.innerText('main');
-  check(emptyText.includes('팀 코드나 결과 링크를 한 줄에 하나씩 붙여 넣어 주세요.') && emptyText.includes('팀원 2명'), '빈 입력은 안내만, 불러온 팀은 그대로');
+  check(emptyText.includes('팀 코드나 결과 링크를 찾지 못했습니다.') && emptyText.includes('팀원 2명'), '빈 입력은 안내만, 불러온 팀은 그대로');
 
   // 파일럿 참여 링크로 들어오면 결과 화면에 내보내기 링크가 생긴다
   await page.goto(FILE + '#/pilot');

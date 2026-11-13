@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { decode, encode, extractCode, NICK_MAX } from '../src/codec';
+import { decode, encode, extractCode, NICK_MAX, normalizeTeam, TEAM_MAX } from '../src/codec';
 import { EX1, makeSummary, pairs, sums } from './fixtures';
 
 const rawCode = (obj: unknown) =>
@@ -20,12 +20,12 @@ const TIED = makeSummary({ aSum: sums(3, 3, 3, 3, 3), b: pairs('PM', 'PM', 'BM',
 
 describe('왕복', () => {
   it('인코딩 → 디코딩 결과가 같다', () => {
-    expect(decode(encode(EX1))).toEqual({ ok: true, summary: EX1, nick: null });
+    expect(decode(encode(EX1))).toEqual({ ok: true, summary: EX1, nick: null, team: null });
   });
 
   it('한글 별명과 본인이 고른 유형 포함', () => {
     const s = { ...TIED, picks: { core: 'B' as const } };
-    expect(decode(encode(s, '  초록 사과 '))).toEqual({ ok: true, summary: s, nick: '초록 사과' });
+    expect(decode(encode(s, '  초록 사과 '))).toEqual({ ok: true, summary: s, nick: '초록 사과', team: null });
   });
 
   it('URL에 그대로 쓸 수 있는 글자만 쓴다', () => {
@@ -40,6 +40,23 @@ describe('왕복', () => {
   it('별명은 20자에서 자른다', () => {
     const r = decode(encode(EX1, '가'.repeat(30)));
     expect(r.ok && r.nick).toBe('가'.repeat(NICK_MAX));
+  });
+
+  it('팀 이름(선택)도 함께 담고, 공백을 정리해 20자에서 자른다', () => {
+    expect(decode(encode(EX1, '가', '  기획   1팀 '))).toEqual({ ok: true, summary: EX1, nick: '가', team: '기획 1팀' });
+    const r = decode(encode(EX1, null, '팀'.repeat(30)));
+    expect(r.ok && r.team).toBe('팀'.repeat(TEAM_MAX));
+    expect(normalizeTeam('   ')).toBeNull();
+  });
+
+  it('팀 이름이 없던 v6 코드도 그대로 열린다(팀 이름은 선택이라 버전을 올리지 않음)', () => {
+    const r = decode(encode(EX1, '가'));
+    expect(r.ok && r.team).toBeNull();
+  });
+
+  it('팀 이름 값이 잘못되면 열지 않는다', () => {
+    expect(decode(rawCode({ ...validPayload(), t: 3 })).ok).toBe(false);
+    expect(decode(rawCode({ ...validPayload(), t: '팀'.repeat(TEAM_MAX + 1) })).ok).toBe(false);
   });
 });
 

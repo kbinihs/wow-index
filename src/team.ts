@@ -4,41 +4,146 @@ import { ARCHETYPES, type Archetype, type Summary } from './types';
 
 export interface Member {
   nick: string | null;
+  /** 결과를 공유할 때 붙은 팀 이름(팀 링크로 들어왔거나 직접 적은 것) */
+  team: string | null;
   summary: Summary;
 }
 
 // ── 붙여 넣은 코드 읽기 ────────────────────────────────
 
-export interface ParsedTeam {
-  members: Member[];
-  /** 읽지 못한 줄. text는 그 줄의 앞부분(14자가 넘으면 줄임) */
-  errors: { line: number; error: DecodeError; text: string }[];
-  /** 앞서 나온 코드와 똑같아서 뺀 줄 */
-  duplicates: number[];
+/** 읽을 글 하나. label은 파일 이름(붙여 넣은 글은 null) */
+export interface TeamSource {
+  label: string | null;
+  text: string;
 }
 
-/** 한 줄에 하나. 결과 링크나 메신저에서 복사한 줄을 붙여 넣어도 코드 부분만 읽는다. */
-export function parseTeamCodes(text: string): ParsedTeam {
-  const out: ParsedTeam = { members: [], errors: [], duplicates: [] };
+/** 어느 글의 몇 번째 줄인지 */
+export interface LineRef {
+  source: string | null;
+  line: number;
+}
+
+export interface ParsedTeam {
+  members: Member[];
+  /** 코드처럼 보이지만 읽지 못한 줄. text는 그 줄의 앞부분(14자가 넘으면 줄임) */
+  errors: (LineRef & { error: DecodeError; text: string })[];
+  /** 앞서 나온 코드와 똑같아서 뺀 줄 */
+  duplicates: LineRef[];
+  /** 같은 팀·같은 별명으로 코드가 여러 개 온 사람. 마지막 것(used)만 쓴다 */
+  replaced: { nick: string; team: string | null; count: number; used: LineRef }[];
+  /** 코드가 없어 건너뛴 줄(대화방의 인사말·이름·시각 등) 수 */
+  skipped: number;
+}
+
+/**
+ * 코드처럼 보이는 줄: 결과 링크가 있거나, 코드 머리('{"v'의 base64인 eyJ)가 있거나,
+ * 줄 전체가 코드 글자로만 된 긴 덩어리. 나머지(대화 내용)는 오류로 알리지 않고 건너뛴다.
+ */
+export function looksLikeCode(line: string): boolean {
+  return /#\/result\//.test(line) || /eyJ[A-Za-z0-9_-]{4,}/.test(line) || /^[A-Za-z0-9_-]{12,}$/.test(line.trim());
+}
+
+/**
+ * 붙여 넣은 글과 올린 파일들을 차례로 읽는다. 한 줄에 코드 하나.
+ * 결과 링크, 메신저에서 복사한 줄, 카카오톡 '대화 내보내기' 파일의 줄에서도 코드 부분만 읽는다.
+ */
+export function parseTeamSources(sources: readonly TeamSource[]): ParsedTeam {
+  const out: ParsedTeam = { members: [], errors: [], duplicates: [], replaced: [], skipped: 0 };
   const seen = new Set<string>();
-  text.split(/\r?\n/).forEach((raw, i) => {
-    const line = i + 1;
-    const trimmed = raw.trim();
-    if (!trimmed) return;
-    const code = extractCode(trimmed);
-    if (seen.has(code)) {
-      out.duplicates.push(line);
-      return;
-    }
-    const r = decode(code);
-    if (!r.ok) {
-      out.errors.push({ line, error: r.error, text: trimmed.length > 14 ? `${trimmed.slice(0, 14)}…` : trimmed });
-      return;
-    }
-    seen.add(code);
-    out.members.push({ nick: r.nick, summary: r.summary });
-  });
+  /** 팀·별명 → members 안의 자리 */
+  const byNick = new Map<string, number>();
+  const counts = new Map<string, { nick: string; team: string | null; count: number; used: LineRef }>();
+  for (const { label, text } of sources) {
+    text.split(/\r?\n/).forEach((raw, i) => {
+      const ref: LineRef = { source: label, line: i + 1 };
+      const trimmed = raw.trim();
+      if (!trimmed) return;
+      if (!looksLikeCode(trimmed)) {
+        out.skipped++;
+        return;
+      }
+      const code = extractCode(trimmed);
+      if (seen.has(code)) {
+        out.duplicates.push(ref);
+        return;
+      }
+      const r = decode(code);
+      if (!r.ok) {
+        out.errors.push({ ...ref, error: r.error, text: trimmed.length > 14 ? `${trimmed.slice(0, 14)}…` : trimmed });
+        return;
+      }
+      seen.add(code);
+      const member: Member = { nick: r.nick, team: r.team, summary: r.summary };
+      if (!r.nick) {
+        out.members.push(member);
+        return;
+      }
+      // 같은 사람이 다시 하고 또 보냈으면 나중 것을 쓴다(자리는 처음 자리 그대로)
+      const key = `${r.team ?? ''}\u0000${r.nick}`;
+      const at = byNick.get(key);
+      if (at === undefined) {
+        byNick.set(key, out.members.length);
+        out.members.push(member);
+        counts.set(key, { nick: r.nick, team: r.team, count: 1, used: ref });
+      } else {
+        out.members[at] = member;
+        const c = counts.get(key)!;
+        c.count++;
+        c.used = ref;
+      }
+    });
+  }
+  out.replaced = [...counts.values()].filter((c) => c.count > 1);
   return out;
+}
+
+/** 붙여 넣은 글 하나만 읽을 때 */
+export const parseTeamCodes = (text: string): ParsedTeam => parseTeamSources([{ label: null, text }]);
+
+// ── 팀별로 나눠 보기 ───────────────────────────────────
+
+/** 팀 고르기의 열쇠. 팀 이름, 팀 표시가 없는 코드, 모두 */
+export type TeamKey = { kind: 'team'; team: string } | { kind: 'none' } | { kind: 'all' };
+
+export interface TeamGroup {
+  key: TeamKey;
+  count: number;
+}
+
+/** 불러온 코드에 들어 있는 팀(사람 많은 순, 같으면 이름순). 팀 표시가 없는 코드는 맨 뒤 */
+export function teamGroups(members: readonly Member[]): TeamGroup[] {
+  const by = new Map<string, number>();
+  let none = 0;
+  for (const m of members) {
+    if (m.team) by.set(m.team, (by.get(m.team) ?? 0) + 1);
+    else none++;
+  }
+  const groups: TeamGroup[] = [...by.entries()]
+    .sort((x, y) => y[1] - x[1] || x[0].localeCompare(y[0], 'ko'))
+    .map(([team, count]) => ({ key: { kind: 'team', team }, count }));
+  if (none) groups.push({ key: { kind: 'none' }, count: none });
+  return groups;
+}
+
+export const sameKey = (a: TeamKey, b: TeamKey): boolean =>
+  a.kind === b.kind && (a.kind !== 'team' || (b.kind === 'team' && a.team === b.team));
+
+export function filterByTeam(members: readonly Member[], key: TeamKey): Member[] {
+  if (key.kind === 'all') return [...members];
+  if (key.kind === 'none') return members.filter((m) => !m.team);
+  return members.filter((m) => m.team === key.team);
+}
+
+/**
+ * 처음 보여 줄 팀. 팀이 하나뿐이면 모두. 여럿이면 원하는 팀(팀 링크를 만든 이름이나 이 브라우저가 들어온 팀)이
+ * 있으면 그 팀, 없으면 모두.
+ */
+export function defaultTeamKey(groups: readonly TeamGroup[], preferred: readonly (string | null)[]): TeamKey {
+  if (groups.length <= 1) return { kind: 'all' };
+  for (const p of preferred) {
+    if (p && groups.some((g) => g.key.kind === 'team' && g.key.team === p)) return { kind: 'team', team: p };
+  }
+  return { kind: 'all' };
 }
 
 // ── 유형 분포(순위 없음) ───────────────────────────────

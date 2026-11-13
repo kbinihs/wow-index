@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'preact/hooks';
+import { teamFromPath } from './teamLink';
 
 export { extractCode } from './codec';
 
@@ -9,7 +10,9 @@ export type Route =
   | { name: 'result'; code: string }
   | { name: 'team' }
   | { name: 'export' }
-  | { name: 'pilot' };
+  | { name: 'pilot' }
+  /** 팀 링크: 팀 이름을 기억하고 처음 화면으로 */
+  | { name: 'join'; team: string };
 
 export function parseHash(hash: string): Route {
   const path = hash.replace(/^#/, '') || '/';
@@ -19,6 +22,9 @@ export function parseHash(hash: string): Route {
   if (path === '/pilot') return { name: 'pilot' };
   const m = path.match(/^\/result\/(.+)$/);
   if (m) return { name: 'result', code: m[1] };
+  const t = path.match(/^\/t\/(.+)$/);
+  const team = t ? teamFromPath(t[1]) : null;
+  if (team) return { name: 'join', team };
   return { name: 'start' };
 }
 

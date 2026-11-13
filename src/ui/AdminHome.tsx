@@ -1,17 +1,12 @@
 import { useRef, useState } from 'preact/hooks';
+import { publicBase } from '../teamLink';
 import { copyText, useFocusHeading } from './common';
-
-/** 응답 화면 주소. 배포에서는 '/', 파일로 열었을 때는 같은 폴더의 index.html */
-function publicUrl(): string {
-  const dir = new URL('./', window.location.href).href;
-  return window.location.protocol === 'file:' ? `${dir}index.html` : dir;
-}
 
 export function AdminHome() {
   const heading = useFocusHeading('admin');
   const [status, setStatus] = useState('');
   const linkRef = useRef<HTMLInputElement>(null);
-  const base = publicUrl();
+  const base = publicBase();
   const pilotLink = `${base}#/pilot`;
 
   const copy = async () => {

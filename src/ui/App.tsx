@@ -1,5 +1,6 @@
 import { useEffect } from 'preact/hooks';
 import { startPilotMode } from '../pilotMode';
+import { saveJoinedTeam } from '../teamLink';
 import { navigate, useRoute, type Route } from '../router';
 import { Result } from './Result';
 import { Start } from './Start';
@@ -16,6 +17,7 @@ const TITLES: Record<Route['name'], string> = {
   team: '우리 팀 구성',
   export: '응답 파일 내보내기',
   pilot: '',
+  join: '',
 };
 
 /** 응답 화면(index.html). 파일럿 분석은 관리 화면(admin.html)에만 있다. */
@@ -32,6 +34,12 @@ export function App() {
     startPilotMode();
     navigate('#/', true);
   }, [route.name]);
+  // 팀장이 보낸 팀 링크: 팀 이름만 기억하고 처음 화면으로
+  useEffect(() => {
+    if (route.name !== 'join') return;
+    saveJoinedTeam(route.team);
+    navigate('#/', true);
+  }, [route]);
   return (
     <>
       <a class="skip-link" href="#main-content" onClick={(e) => {
@@ -41,14 +49,14 @@ export function App() {
         본문으로 건너뛰기
       </a>
       {/* 첫 화면은 큰 제목이 있어 머리줄을 두지 않는다 */}
-      {route.name !== 'start' && route.name !== 'pilot' && (
+      {route.name !== 'start' && route.name !== 'pilot' && route.name !== 'join' && (
         <header class="site-header no-print">
           <a href="#/" class="site-title">
             <Wordmark />
           </a>
         </header>
       )}
-      {route.name !== 'start' && route.name !== 'pilot' && <PrintBrand />}
+      {route.name !== 'start' && route.name !== 'pilot' && route.name !== 'join' && <PrintBrand />}
       {route.name === 'test' && <Test />}
       {route.name === 'result' && <Result key={route.code} code={route.code} />}
       {route.name === 'team' && <Team />}

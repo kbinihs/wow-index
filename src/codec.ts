@@ -3,7 +3,7 @@ import { ARCHETYPES, type Archetype, type Picks, type Summary } from './types';
 
 /**
  * 결과 링크·팀 코드 = JSON → UTF-8 → base64url.
- * 담는 것: 버전, 별명(선택), A 평균 5개, B 상황별 best/worst, 동점일 때 본인이 고른 것.
+ * 담는 것: 버전, 별명(선택), 팀 이름(선택), A 평균 5개, B 상황별 best/worst, 동점일 때 본인이 고른 것.
  * A 문항별 응답은 넣지 않는다.
  */
 /**
@@ -13,10 +13,14 @@ import { ARCHETYPES, type Archetype, type Picks, type Summary } from './types';
  */
 export const CODE_VERSION = 6;
 export const NICK_MAX = 20;
+/** 팀 이름(팀 링크로 들어오면 미리 채워짐). 별명처럼 선택이라 버전을 올리지 않는다. */
+export const TEAM_MAX = 20;
 
 interface Payload {
   v: number;
   n?: string;
+  /** 팀 이름(선택) */
+  t?: string;
   /** A 원형별 평균(P·B·S·G·M) */
   a: number[];
   /** B1–B6, 'PM' = best P, worst M */
@@ -28,7 +32,7 @@ interface Payload {
 export type DecodeError = 'empty' | 'malformed' | 'old-version' | 'unsupported-version' | 'invalid';
 
 export type DecodeResult =
-  | { ok: true; summary: Summary; nick: string | null }
+  | { ok: true; summary: Summary; nick: string | null; team: string | null }
   | { ok: false; error: DecodeError };
 
 export const DECODE_ERROR_TEXT: Record<DecodeError, string> = {
@@ -57,12 +61,20 @@ export function normalizeNick(nick: string | null | undefined): string | null {
   return t ? t : null;
 }
 
-export function encode(summary: Summary, nick?: string | null): string {
+/** 앞뒤 공백을 지우고 가운데 공백은 하나로, 20자까지. 비면 null */
+export function normalizeTeam(team: string | null | undefined): string | null {
+  const t = (team ?? '').replace(/\s+/g, ' ').trim().slice(0, TEAM_MAX).trim();
+  return t ? t : null;
+}
+
+export function encode(summary: Summary, nick?: string | null, team?: string | null): string {
   const n = normalizeNick(nick);
+  const t = normalizeTeam(team);
   const p = { ...(summary.picks.core ? { c: summary.picks.core } : {}), ...(summary.picks.second ? { s: summary.picks.second } : {}) };
   const payload: Payload = {
     v: CODE_VERSION,
     ...(n ? { n } : {}),
+    ...(t ? { t } : {}),
     a: ARCHETYPES.map((k) => summary.aSum[k] / ITEMS_PER_ARCHETYPE),
     b: summary.b.map((c) => c.best + c.worst),
     ...(Object.keys(p).length ? { p } : {}),
@@ -135,7 +147,8 @@ export function decode(input: string): DecodeResult {
   if (p.v !== CODE_VERSION) return { ok: false, error: 'unsupported-version' };
 
   if (p.n !== undefined && (typeof p.n !== 'string' || p.n.length > NICK_MAX)) return { ok: false, error: 'invalid' };
+  if (p.t !== undefined && (typeof p.t !== 'string' || p.t.length > TEAM_MAX)) return { ok: false, error: 'invalid' };
   const summary = toSummary(p);
   if (!summary) return { ok: false, error: 'invalid' };
-  return { ok: true, summary, nick: normalizeNick(p.n as string | undefined) };
+  return { ok: true, summary, nick: normalizeNick(p.n as string | undefined), team: normalizeTeam(p.t as string | undefined) };
 }
