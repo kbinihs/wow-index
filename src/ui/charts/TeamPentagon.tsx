@@ -108,7 +108,7 @@ export function TeamPentagon({
         <li>
           <span class="swatch-even" /> {referenceLabel}
         </li>
-        <li>회색 선 한 칸 = {step}명</li>
+        <li>눈금 한 칸 = {step}명</li>
       </ul>
     </figure>
   );

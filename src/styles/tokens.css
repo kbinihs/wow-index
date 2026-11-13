@@ -1,67 +1,79 @@
 /*
  * 색·글꼴 토큰.
- * 색은 World Vision 브랜드 리프레시 팔레트(Canva 'World Vision Brand Refresh Elements')에서 가져왔다.
- * 규칙: 기본은 Orange·Midnight·White. 오렌지는 밝은 바탕에서 큰 제목·면·장식에만 쓰고 작은 글자에는 쓰지 않는다.
- * 제목 글꼴 Degular는 웹 글꼴로 받을 수 없어 Inter Tight로 대신한다.
+ * 색은 네 가지 기본색에서 나온다: Navy #213448 · Steel #547792 · Sky #94B4C1 · Sand #EAE0CF.
+ * 바탕·면은 Sand를 흰색에 섞은 옅은 색, 글자는 Navy, 선택·강조·그래프는 Steel(다크에서는 Sky).
+ * Sky는 밝은 바탕에서 대비가 낮아(흰 바탕 2.2) 글자에는 쓰지 않고 장식·면에만 쓴다.
+ * 대비 확인: npm run contrast
  */
 :root {
   color-scheme: light;
   --font-body: 'Inter', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', '맑은 고딕', system-ui, sans-serif;
   --font-display: 'Inter Tight', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', '맑은 고딕', system-ui, sans-serif;
 
-  /* 브랜드 팔레트 */
-  --wv-orange: #ff5515;
-  --wv-midnight: #111222;
-  --wv-white: #ffffff;
-  --field-50: #f3f2f0;
-  --field-100: #e9e7e3;
-  --field-200: #dedbd7;
-  --field-300: #d3d0c9;
-  --field-400: #c9c4bc;
-  --grey-500: #6d6a76;
-  --grey-600: #565461;
-  --grey-700: #3f3d4c;
-  --grey-800: #282737;
-  --orange-100: #ffebe1;
-  --orange-200: #ffd5bf;
-  --orange-400: #ffa57b;
-  --orange-800: #f14014;
-  --orange-900: #e32c13;
+  /* 기본색 */
+  --navy: #213448;
+  --steel: #547792;
+  --sky: #94b4c1;
+  --sand: #eae0cf;
+  --white: #ffffff;
+  /* 기본색에서 섞어 만든 색 */
+  --sand-50: #f6f1e9; /* Sand 45% + 흰색 */
+  --sand-100: #f0e9dd; /* Sand 70% + 흰색 */
+  --sand-200: #e4dcce;
+  --sand-300: #d2cbbf; /* Sand에 Navy 12% */
+  --sky-100: #e1eaee; /* Sky 28% + 흰색 */
+  --steel-700: #4b6b85; /* Steel에 Navy 18%: 작은 글자도 4.5를 넘는 Steel */
+  --navy-700: #334b62; /* Navy에 Steel 35% */
+  --navy-900: #162331; /* 다크 바탕 */
+  --navy-600: #2a4055; /* 다크 회색 면 */
+  --navy-500: #354f66; /* 다크 선택 면 */
+  --navy-400: #385269; /* 다크 테두리 */
+  --navy-450: #2e465c; /* 다크 눈금 */
+  --sand-800: #69655d; /* Sand에 검정 55%: 따뜻한 짙은 회색 */
+  --sand-600: #8c867c; /* Sand에 검정 40% */
+  --sand-450: #a4a4a0; /* Sand에 Navy 35%: 다크용 중간 회색 */
   --red-800: #b10831;
   --red-200: #e4b2be;
 
   /* 화면 역할 */
-  --bg: var(--field-50);
-  --surface: var(--wv-white);
-  --surface-2: var(--field-100);
-  --text: var(--wv-midnight);
-  --text-2: var(--grey-700);
-  --text-3: var(--grey-600);
-  --border: var(--field-300);
-  --grid: var(--field-200);
-  /* 작은 그래픽(동그라미 테두리 등)에 쓰는 오렌지. 밝은 바탕에서 3:1을 넘도록 Orange 800 */
-  --orange-ui: var(--orange-800);
-  /* 오렌지 면 + 흰 글자. 흰 글자는 #FF5515 위에서 3.2라 19px 굵은 글자(큰 글자)에만 쓴다 */
-  --accent: var(--wv-orange);
-  --accent-ink: var(--wv-white);
-  /* 작은 글자가 놓이는 오렌지 면(배지 등): Orange 900, 흰 글자 4.5 */
-  --accent-strong: var(--orange-900);
-  --accent-soft: var(--orange-100);
-  /* 어두운 면 + 흰 글자 */
-  --strong: var(--wv-midnight);
-  --strong-ink: var(--wv-white);
-  --strong-soft: var(--field-100);
-  --focus: var(--wv-midnight);
+  --bg: var(--sand-50);
+  --surface: var(--white);
+  --surface-2: var(--sand-100);
+  --text: var(--navy);
+  --text-2: var(--navy-700);
+  --text-3: var(--steel-700);
+  --border: var(--sand-300);
+  --grid: var(--sand-200);
+  /* 작은 그래픽(동그라미 테두리, 진행 막대, 선택 테두리, 오각형 등). 흰 면 4.7, 바탕 4.2 */
+  --accent-ui: var(--steel);
+  /* 주요 버튼: Navy 면 + 흰 글자 */
+  --accent: var(--navy);
+  --accent-ink: var(--white);
+  /* 작은 글자가 놓이는 강조 면(가장 맡고 싶음 배지, 주 유형 칩): 흰 글자 5.6 */
+  --accent-strong: var(--steel-700);
+  --accent-soft: var(--sky-100);
+  /* 어두운 면 + 흰 글자(가장 맡고 싶지 않음 배지, 보조 유형 칩) */
+  --strong: var(--navy);
+  --strong-ink: var(--white);
+  --strong-soft: var(--sand-100);
+  --focus: var(--navy);
   --danger: var(--red-800);
-  --danger-ink: var(--wv-white);
-  --banner-bg: var(--orange-100);
-  --banner-edge: var(--wv-orange);
-  --map-line: var(--grey-600);
+  --danger-ink: var(--white);
+  --banner-bg: var(--sand-100);
+  --banner-edge: var(--steel);
+  --map-line: var(--steel);
+  /* 응답 동그라미: 맡고 싶지 않은 쪽은 따뜻한 회색, 가운데는 옅은 회색, 맡고 싶은 쪽은 Steel */
+  --scale-neg: var(--sand-800);
+  --scale-mid: var(--sand-600);
+  --scale-pos: var(--steel);
+  /* 첫 화면 오각형 장식 */
+  --deco-line: var(--sky);
+  --deco-dot: var(--steel);
 
   /* 문양은 어느 테마에서나 같은 색 */
-  --crest-field: var(--field-100);
-  --crest-orange: var(--wv-orange);
-  --crest-ink: var(--wv-midnight);
+  --crest-field: var(--sand);
+  --crest-div: var(--sky);
+  --crest-ink: var(--navy);
 }
 
 /*
@@ -72,48 +84,66 @@
 @media screen and (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
     color-scheme: dark;
-    --bg: var(--wv-midnight);
-    --surface: var(--grey-800);
-    --surface-2: var(--grey-700);
-    --text: var(--wv-white);
-    --text-2: var(--field-200);
-    --text-3: var(--field-400);
-    --border: var(--grey-600);
-    --grid: var(--grey-700);
-    --accent-soft: #3d2419;
-    --strong: var(--wv-white);
-    --strong-ink: var(--wv-midnight);
-    --strong-soft: var(--grey-700);
-    --orange-ui: var(--wv-orange);
-    --focus: var(--wv-white);
+    --bg: var(--navy-900);
+    --surface: var(--navy);
+    --surface-2: var(--navy-600);
+    --text: var(--sand-50);
+    --text-2: var(--sand);
+    --text-3: var(--sky);
+    --border: var(--navy-400);
+    --grid: var(--navy-450);
+    --accent-ui: var(--sky);
+    --accent: var(--sky);
+    --accent-ink: var(--navy);
+    --accent-strong: var(--sky);
+    --accent-soft: var(--navy-500);
+    --strong: var(--sand);
+    --strong-ink: var(--navy);
+    --strong-soft: var(--navy-600);
+    --focus: var(--sand);
     --danger: var(--red-200);
-    --danger-ink: var(--wv-midnight);
-    --banner-bg: #3d2419;
-    --map-line: var(--field-300);
+    --danger-ink: var(--navy);
+    --banner-bg: var(--navy-600);
+    --banner-edge: var(--sky);
+    --map-line: var(--sky);
+    --scale-neg: var(--sand);
+    --scale-mid: var(--sand-450);
+    --scale-pos: var(--sky);
+    --deco-line: var(--steel);
+    --deco-dot: var(--sky);
   }
 }
 
 @media screen {
   :root[data-theme='dark'] {
     color-scheme: dark;
-    --bg: var(--wv-midnight);
-    --surface: var(--grey-800);
-    --surface-2: var(--grey-700);
-    --text: var(--wv-white);
-    --text-2: var(--field-200);
-    --text-3: var(--field-400);
-    --border: var(--grey-600);
-    --grid: var(--grey-700);
-    --accent-soft: #3d2419;
-    --strong: var(--wv-white);
-    --strong-ink: var(--wv-midnight);
-    --strong-soft: var(--grey-700);
-    --orange-ui: var(--wv-orange);
-    --focus: var(--wv-white);
+    --bg: var(--navy-900);
+    --surface: var(--navy);
+    --surface-2: var(--navy-600);
+    --text: var(--sand-50);
+    --text-2: var(--sand);
+    --text-3: var(--sky);
+    --border: var(--navy-400);
+    --grid: var(--navy-450);
+    --accent-ui: var(--sky);
+    --accent: var(--sky);
+    --accent-ink: var(--navy);
+    --accent-strong: var(--sky);
+    --accent-soft: var(--navy-500);
+    --strong: var(--sand);
+    --strong-ink: var(--navy);
+    --strong-soft: var(--navy-600);
+    --focus: var(--sand);
     --danger: var(--red-200);
-    --danger-ink: var(--wv-midnight);
-    --banner-bg: #3d2419;
-    --map-line: var(--field-300);
+    --danger-ink: var(--navy);
+    --banner-bg: var(--navy-600);
+    --banner-edge: var(--sky);
+    --map-line: var(--sky);
+    --scale-neg: var(--sand);
+    --scale-mid: var(--sand-450);
+    --scale-pos: var(--sky);
+    --deco-line: var(--steel);
+    --deco-dot: var(--sky);
   }
 }
 
@@ -123,13 +153,13 @@
     color-scheme: light;
     --bg: #ffffff;
     --surface: #ffffff;
-    --surface-2: var(--field-100);
+    --surface-2: var(--sand-100);
     --text: #000000;
     --text-2: #333333;
     --text-3: #444444;
     --border: #bbbbbb;
     --grid: #dddddd;
-    --strong: var(--wv-midnight);
+    --strong: var(--navy);
     --strong-ink: #ffffff;
     --map-line: #333333;
   }

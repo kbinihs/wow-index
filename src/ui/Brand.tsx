@@ -1,7 +1,4 @@
-import logoColor from '../assets/wv-logo.webp';
-import logoWhite from '../assets/wv-logo-white.webp';
-
-/** 제목 글자: WoW의 o를 오렌지 고리로 쓴다 */
+/** 제목 글자: WoW의 o를 고리로 쓴다 */
 export const TITLE = 'WoW Index';
 export const TITLE_SUB = 'Ways of Working';
 
@@ -17,38 +14,21 @@ export function Wordmark({ class: cls = '' }: { class?: string }) {
 }
 
 /**
- * 브랜드의 Horizon(주황 원호)을 따른 배경 장식. 처음 열릴 때 원호가 그려지며 펼쳐진다.
+ * 첫 화면 오른쪽 위 장식. 다섯 방식을 뜻하는 오각형을 세 겹으로 겹치고(팀 화면 오각형과 같은 모양),
+ * 안쪽 꼭짓점 다섯에 점을 찍는다. 처음 열릴 때 선이 그려지고 점이 차례로 찍힌다.
  */
-export function Horizon() {
+export function PentaDeco() {
   return (
-    <svg class="horizon" viewBox="0 0 400 400" aria-hidden="true" focusable="false">
-      <defs>
-        <linearGradient id="horizon-grad" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="#ff7a38" />
-          <stop offset="0.55" stop-color="#ff5515" />
-          <stop offset="1" stop-color="#f14014" />
-        </linearGradient>
-      </defs>
-      <path class="horizon-arc horizon-arc-1" pathLength={1} d="M110,0 A290,290 0 0 0 400,290" />
-      <path class="horizon-arc horizon-arc-2" pathLength={1} d="M230,0 A170,170 0 0 0 400,170" />
+    <svg class="hero-deco" viewBox="0 0 400 400" aria-hidden="true" focusable="false">
+      <path class="deco-ring deco-ring-1" pathLength={1} d="M300.0,30.0 L366.6,78.4 L341.1,156.6 L258.9,156.6 L233.4,78.4 Z" />
+      <path class="deco-ring deco-ring-2" pathLength={1} d="M300.0,-40.0 L433.1,56.7 L382.3,213.3 L217.7,213.3 L166.9,56.7 Z" />
+      <path class="deco-ring deco-ring-3" pathLength={1} d="M300.0,-110.0 L499.7,35.1 L423.4,269.9 L176.6,269.9 L100.3,35.1 Z" />
+      <circle class="deco-dot" style={{ "--i": 0 }} cx="300.0" cy="30.0" r="7" />
+      <circle class="deco-dot" style={{ "--i": 1 }} cx="366.6" cy="78.4" r="7" />
+      <circle class="deco-dot" style={{ "--i": 2 }} cx="341.1" cy="156.6" r="7" />
+      <circle class="deco-dot" style={{ "--i": 3 }} cx="258.9" cy="156.6" r="7" />
+      <circle class="deco-dot" style={{ "--i": 4 }} cx="233.4" cy="78.4" r="7" />
     </svg>
-  );
-}
-
-/** 로고 원본 크기(가로세로 비율을 지키려고 img에 넣는다) */
-const LOGO_W = 414;
-const LOGO_H = 84;
-
-/**
- * 월드비전 로고(기관에서 받은 공식 파일). 밝은 면에는 남색 글자, 다크 모드에는 흰 글자 판을 쓴다.
- * 두 판 가운데 어느 쪽을 보일지는 CSS(.org-logo-light / .org-logo-dark)가 정한다. 인쇄는 늘 밝은 면.
- */
-export function OrgLogo({ class: cls = '' }: { class?: string }) {
-  return (
-    <span class={`org-logo ${cls}`} role="img" aria-label="월드비전">
-      <img class="org-logo-light" src={logoColor} alt="" width={LOGO_W} height={LOGO_H} draggable={false} />
-      <img class="org-logo-dark" src={logoWhite} alt="" width={LOGO_W} height={LOGO_H} draggable={false} />
-    </span>
   );
 }
 
@@ -57,7 +37,6 @@ export function PrintBrand() {
   return (
     <div class="print-brand" aria-hidden="true">
       <Wordmark />
-      <OrgLogo />
     </div>
   );
 }

@@ -8,7 +8,7 @@ import type { Archetype } from '../types';
  * - Sweeper: 반대 대각 분할 + 깔때기와 한 방울(걸러서 핵심만 남김)
  * - Grower: 셰브런(올라가는 띠) + 새싹(키움)
  * - Maintainer: 테두리 띠(지킴) + 닻(흔들리지 않음)
- * 색은 브랜드 기본색(Orange·Midnight)과 Field 100만 쓴다.
+ * 색은 Sand(바탕)·Sky(분할)·Navy(상징과 테두리) 세 가지만 쓴다.
  */
 
 const SHIELD = 'M10,8 H90 V52 C90,84 70,104 50,114 C30,104 10,84 10,52 Z';

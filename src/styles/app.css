@@ -1,4 +1,4 @@
-/* 배치: 모바일 한 줄 흐름. 첫 화면은 Horizon 원호와 큰 제목, 결과는 문양과 유형 이름이 머리에 온다. */
+/* 배치: 모바일 한 줄 흐름. 첫 화면은 오각형 장식과 큰 제목, 결과는 문양과 유형 이름이 머리에 온다. */
 
 *,
 *::before,
@@ -91,7 +91,7 @@ a {
   width: 0.62em;
   height: 0.62em;
   margin: 0 0.04em;
-  border: 0.17em solid var(--wv-orange);
+  border: 0.17em solid var(--accent-ui);
   border-radius: 50%;
   vertical-align: -0.02em;
 }
@@ -120,51 +120,6 @@ a {
   color: var(--text);
   text-decoration: none;
   font-size: 1.15rem;
-}
-/* ── 월드비전 로고 ─────────────────────────────────── */
-
-/* 높이만 정하고 너비는 비율대로. 밝은 면은 남색 글자 판, 다크 모드는 흰 글자 판 */
-.org-logo {
-  display: inline-flex;
-  flex-shrink: 0;
-  line-height: 0;
-}
-.org-logo img {
-  height: var(--logo-h, 22px);
-  width: auto;
-}
-.org-logo-light {
-  display: block;
-}
-.org-logo-dark {
-  display: none;
-}
-@media screen and (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) .org-logo-light {
-    display: none;
-  }
-  :root:not([data-theme='light']) .org-logo-dark {
-    display: block;
-  }
-}
-@media screen {
-  :root[data-theme='dark'] .org-logo-light {
-    display: none;
-  }
-  :root[data-theme='dark'] .org-logo-dark {
-    display: block;
-  }
-}
-.site-org {
-  --logo-h: 22px;
-}
-/* 첫 화면: 원호(오른쪽 위)와 겹치지 않게 왼쪽 위, 제목 위에 둔다 */
-.hero-org {
-  position: relative;
-  display: flex;
-  width: max-content;
-  margin: 0 0 28px;
-  --logo-h: 28px;
 }
 /* 인쇄물 머리. 화면에서는 숨긴다 */
 .print-brand {
@@ -240,9 +195,9 @@ a {
   position: relative;
   overflow: hidden;
   margin: -20px calc(-1 * max(16px, env(safe-area-inset-right, 0px))) 20px calc(-1 * max(16px, env(safe-area-inset-left, 0px)));
-  padding: 24px max(16px, env(safe-area-inset-right, 0px)) 28px max(16px, env(safe-area-inset-left, 0px));
+  padding: 56px max(16px, env(safe-area-inset-right, 0px)) 28px max(16px, env(safe-area-inset-left, 0px));
 }
-.horizon {
+.hero-deco {
   position: absolute;
   top: 0;
   right: 0;
@@ -250,32 +205,39 @@ a {
   height: 250px;
   pointer-events: none;
 }
-/* 원호를 가운데 단(640px)의 가장자리가 아니라 화면 오른쪽 끝에 붙인다(넓은 화면에서 잘리지 않게) */
+/* 장식을 가운데 단(640px)의 가장자리가 아니라 화면 오른쪽 끝에 붙인다(넓은 화면에서 잘리지 않게) */
 .start .hero {
   position: static;
 }
 @media (min-width: 720px) {
-  .horizon {
+  .hero-deco {
     width: 340px;
     height: 340px;
   }
 }
-/* 아주 좁은 화면에서는 원호가 'WAYS OF WORKING' 글자를 덮지 않게 줄인다 */
+/* 아주 좁은 화면에서는 장식이 'WAYS OF WORKING' 글자를 덮지 않게 줄인다 */
 @media (max-width: 359px) {
-  .horizon {
+  .hero-deco {
     width: 190px;
     height: 190px;
   }
 }
-.horizon-arc {
+.deco-ring {
   fill: none;
-  stroke: url(#horizon-grad);
+  stroke: var(--deco-line);
+  stroke-linejoin: round;
 }
-.horizon-arc-1 {
-  stroke-width: 54;
+.deco-ring-1 {
+  stroke-width: 5;
 }
-.horizon-arc-2 {
-  stroke-width: 34;
+.deco-ring-2 {
+  stroke-width: 3.5;
+}
+.deco-ring-3 {
+  stroke-width: 2.5;
+}
+.deco-dot {
+  fill: var(--deco-dot);
 }
 .hero-eyebrow {
   position: relative;
@@ -333,7 +295,7 @@ a {
   border-radius: 999px;
   border: 2px solid transparent;
   font: inherit;
-  /* 19px 굵게: 오렌지 위 흰 글자가 큰 글자 대비 기준(3:1)을 넘도록 */
+  /* 19px 굵게: 누르는 자리가 분명하도록 큰 글자로 */
   font-size: 1.1875rem;
   font-weight: 700;
   line-height: 1.2;
@@ -436,17 +398,17 @@ progress {
   border-radius: 999px;
   overflow: hidden;
   background: var(--grid);
-  accent-color: var(--wv-orange);
+  accent-color: var(--accent-ui);
 }
 progress::-webkit-progress-bar {
   background: var(--grid);
 }
 progress::-webkit-progress-value {
-  background: var(--wv-orange);
+  background: var(--accent-ui);
   border-radius: 999px;
 }
 progress::-moz-progress-bar {
-  background: var(--wv-orange);
+  background: var(--accent-ui);
 }
 
 fieldset.question {
@@ -473,7 +435,7 @@ fieldset.question legend {
 }
 .likert.is-active {
   background: var(--surface);
-  box-shadow: inset 4px 0 0 var(--wv-orange);
+  box-shadow: inset 4px 0 0 var(--accent-ui);
 }
 .likert-q {
   float: left;
@@ -522,14 +484,14 @@ fieldset.question legend {
 }
 .dot-1,
 .dot-2 {
-  --dot-color: var(--text-2);
+  --dot-color: var(--scale-neg);
 }
 .dot-3 {
-  --dot-color: var(--text-3);
+  --dot-color: var(--scale-mid);
 }
 .dot-4,
 .dot-5 {
-  --dot-color: var(--orange-ui);
+  --dot-color: var(--scale-pos);
 }
 .dot-face {
   display: block;
@@ -661,7 +623,7 @@ fieldset.question legend {
 }
 .role-best,
 .role-best:hover {
-  border-color: var(--wv-orange);
+  border-color: var(--accent-ui);
   background: var(--accent-soft);
 }
 .role-worst,
@@ -722,7 +684,7 @@ fieldset.question legend {
   margin-top: 2px;
 }
 .option input:checked + .option-face {
-  border-color: var(--wv-orange);
+  border-color: var(--accent-ui);
   background: var(--accent-soft);
 }
 .option input:focus-visible + .option-face {
@@ -886,7 +848,7 @@ fieldset.question legend {
 }
 .map-halo {
   fill: var(--accent-soft);
-  stroke: var(--wv-orange);
+  stroke: var(--accent-ui);
   stroke-width: 2;
 }
 .map-name,
@@ -980,7 +942,7 @@ fieldset.question legend {
   outline-offset: 2px;
 }
 .phase-option.is-on {
-  border: 2px solid var(--orange-ui);
+  border: 2px solid var(--accent-ui);
   padding: 9px 11px;
   background: var(--accent-soft);
 }
@@ -1003,19 +965,19 @@ fieldset.question legend {
 }
 .pent-total {
   fill: var(--accent-soft);
-  stroke: var(--orange-ui);
+  stroke: var(--accent-ui);
   stroke-width: 2;
   stroke-linejoin: round;
 }
 .pent-core {
-  fill: var(--orange-ui);
+  fill: var(--accent-ui);
   stroke: var(--surface);
   stroke-width: 2;
   stroke-linejoin: round;
 }
 .pent-dot {
   fill: var(--surface);
-  stroke: var(--orange-ui);
+  stroke: var(--accent-ui);
   stroke-width: 2;
 }
 .pent-even {
@@ -1060,11 +1022,11 @@ fieldset.question legend {
   border-radius: 3px;
 }
 .swatch-core {
-  background: var(--orange-ui);
+  background: var(--accent-ui);
 }
 .swatch-total {
   background: var(--accent-soft);
-  border: 2px solid var(--orange-ui);
+  border: 2px solid var(--accent-ui);
 }
 .swatch-even {
   display: inline-block;
@@ -1119,7 +1081,7 @@ textarea {
   flex: none;
   width: 20px;
   height: 20px;
-  accent-color: var(--orange-ui);
+  accent-color: var(--accent-ui);
 }
 /* 'Grower(주 1명 · 보조 1명)'처럼 괄호 안에서 줄이 바뀌면 안 되는 덩어리 */
 .nowrap {
@@ -1407,11 +1369,11 @@ input[type='file'] {
   fill: var(--crest-field);
 }
 .crest-div {
-  fill: var(--crest-orange);
+  fill: var(--crest-div);
 }
 .crest-bordure {
   fill: none;
-  stroke: var(--crest-orange);
+  stroke: var(--crest-div);
   stroke-width: 18;
 }
 .crest-charge {
@@ -1490,15 +1452,23 @@ input[type='file'] {
   }
 }
 
-/* 첫 화면: 원호가 그려지며 펼쳐지고, 제목이 올라오고, 문양이 차례로 찍힌다 */
-.horizon-arc {
+/* 첫 화면: 오각형 선이 안쪽부터 그려지고 꼭짓점이 찍히고, 제목이 올라오고, 문양이 차례로 찍힌다 */
+.deco-ring {
   stroke-dasharray: 1;
   animation: draw 1.3s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
-.horizon-arc-2 {
-  animation-delay: 0.2s;
+.deco-ring-2 {
+  animation-delay: 0.15s;
 }
-.hero-org,
+.deco-ring-3 {
+  animation-delay: 0.3s;
+}
+.deco-dot {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: rise 0.4s ease-out both;
+  animation-delay: calc(var(--i, 0) * 80ms + 600ms);
+}
 .hero-eyebrow,
 .hero-title,
 .hero-sub {
@@ -1561,7 +1531,7 @@ input[type='file'] {
   body {
     background: #fff;
   }
-  /* 머리줄 대신 맨 위에 제목 글자와 로고 */
+  /* 머리줄 대신 맨 위에 제목 글자 */
   .print-brand {
     display: flex;
     align-items: center;
@@ -1571,9 +1541,6 @@ input[type='file'] {
     padding-bottom: 10px;
     border-bottom: 1px solid #bbbbbb;
     font-size: 1.15rem;
-  }
-  .print-brand .org-logo {
-    --logo-h: 24px;
   }
   .page {
     max-width: none;

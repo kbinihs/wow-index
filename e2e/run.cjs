@@ -101,19 +101,7 @@ async function run(colorScheme) {
   await noHScroll(page, '시작');
   const startText = await page.innerText('main');
   check(!startText.includes('파일럿') && (await page.locator('a[href="#/analysis"]').count()) === 0, '응답 화면에 파일럿 분석 링크 없음');
-  // 월드비전 로고: 밝은 면은 남색 글자 판, 다크 모드는 흰 글자 판만 보인다
-  const logoShown = colorScheme === 'dark' ? '.hero-org .org-logo-dark' : '.hero-org .org-logo-light';
-  const logoHidden = colorScheme === 'dark' ? '.hero-org .org-logo-light' : '.hero-org .org-logo-dark';
-  const logoBox = await page.locator(logoShown).boundingBox();
-  check(
-    (await page.locator('.hero-org[role="img"][aria-label="월드비전"]').count()) === 1 &&
-      (await page.isVisible(logoShown)) &&
-      !(await page.isVisible(logoHidden)) &&
-      logoBox !== null &&
-      Math.round(logoBox.height) === 28 &&
-      (await page.evaluate((sel) => document.querySelector(sel).naturalWidth > 0, logoShown)),
-    `처음 화면 월드비전 로고(${colorScheme === 'dark' ? '흰 글자' : '남색 글자'} 판)`,
-  );
+  check((await page.locator('.hero-deco .deco-ring').count()) === 3 && (await page.locator('.hero-deco .deco-dot').count()) === 5, '처음 화면 오각형 장식');
   check(startText.includes('팀 결과 모아 보기') && (await page.locator('a[href="#/team"]').count()) === 1, '응답 화면에서 팀 화면 열기');
   await page.click('text=시작하기');
 
@@ -125,12 +113,8 @@ async function run(colorScheme) {
   const text = await page.innerText('main');
   check((await page.locator('a[href="#/export"]').count()) === 0, '파일럿 참여 링크로 들어오지 않으면 내보내기 링크 없음');
   check((await page.innerText('h1')).trim() === 'Prototyper-Sweeper', '유형 Prototyper-Sweeper');
-  check(
-    (await page.isVisible(`.site-header .org-logo-${colorScheme === 'dark' ? 'dark' : 'light'}`)) &&
-      (await page.locator('.print-brand').count()) === 1 &&
-      !(await page.isVisible('.print-brand')),
-    '머리줄 월드비전 로고, 인쇄용 머리는 화면에서 숨김',
-  );
+  check((await page.locator('.print-brand').count()) === 1 && !(await page.isVisible('.print-brand')), '인쇄용 머리는 화면에서 숨김');
+  check((await page.locator('img').count()) === 0, '이미지 파일 없음(그림은 모두 SVG)');
   check(text.includes('응답을 모아 보니 새 아이디어를 내고 만들어 보는 일이 가장 앞섰고, 그다음은 다듬고 덜어 내는 일이었습니다.'), '머리 문장');
   check(!text.includes('상황 선택에서') && !text.includes('끌림') && !text.includes('끌렸'), '상황 선택 섹션 없음, 끌림 표현 없음');
   check(/→ Builder/.test(text), '성장 방향 Builder');

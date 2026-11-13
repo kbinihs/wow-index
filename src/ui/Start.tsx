@@ -6,7 +6,7 @@ import { extractCode, navigate, resultHash } from '../router';
 import { ARCHETYPES } from '../types';
 import { NAMES } from '../data/profiles';
 import { isPilotMode } from '../pilotMode';
-import { Horizon, OrgLogo, TITLE_SUB, Wordmark } from './Brand';
+import { PentaDeco, TITLE_SUB, Wordmark } from './Brand';
 import { useFocusHeading } from './common';
 import { Crest } from './Crest';
 
@@ -42,8 +42,7 @@ export function Start() {
   return (
     <main class="page start">
       <section class="hero">
-        <Horizon />
-        <OrgLogo class="hero-org" />
+        <PentaDeco />
         <p class="hero-eyebrow">{TITLE_SUB}</p>
         <h1 ref={heading} tabIndex={-1} class="hero-title">
           <Wordmark />

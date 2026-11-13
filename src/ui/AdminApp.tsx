@@ -2,7 +2,7 @@ import { useEffect } from 'preact/hooks';
 import { useAdminRoute, type AdminRoute } from '../router';
 import { AdminHome } from './AdminHome';
 import { Analysis } from './Analysis';
-import { OrgLogo, PrintBrand, Wordmark } from './Brand';
+import { PrintBrand, Wordmark } from './Brand';
 import { Team } from './Team';
 
 const TITLES: Record<AdminRoute['name'], string> = {
@@ -34,7 +34,6 @@ export function AdminApp() {
           <Wordmark />
           <span class="site-badge">관리</span>
         </a>
-        <OrgLogo class="site-org" />
       </header>
       <PrintBrand />
       {route.name === 'home' && <AdminHome />}
