@@ -171,6 +171,9 @@ a {
   padding: 12px;
   margin-top: 12px;
 }
+.banner[role='alert'] {
+  border-left-color: var(--danger);
+}
 .error {
   color: var(--danger);
   font-weight: 500;
@@ -215,13 +218,6 @@ a {
     height: 340px;
   }
 }
-/* 아주 좁은 화면에서는 장식이 'WAYS OF WORKING' 글자를 덮지 않게 줄인다 */
-@media (max-width: 359px) {
-  .hero-deco {
-    width: 190px;
-    height: 190px;
-  }
-}
 .deco-ring {
   fill: none;
   stroke: var(--deco-line);
@@ -238,6 +234,31 @@ a {
 }
 .deco-dot {
   fill: var(--deco-dot);
+}
+/* 좁은 화면: 장식이 제목 글자를 가로지르지 않게 제목 위 구석에 작게 둔다.
+   560~599px에서도 큰 장식의 바깥 선이 'Index'의 x에 닿으므로 599px까지 작게 둔다 */
+@media (max-width: 599px) {
+  .hero-deco {
+    width: 128px;
+    height: 128px;
+    top: -5px;
+    right: 36px;
+    overflow: visible; /* 바깥 두 겹은 viewBox 밖으로 나간다 */
+  }
+  /* 작아진 만큼 선과 점을 굵게(화면에서 약 2.6 / 1.9 / 1.4px, 점 지름 약 6px) */
+  .deco-ring-1 {
+    stroke-width: 8;
+  }
+  .deco-ring-2 {
+    stroke-width: 6;
+  }
+  .deco-ring-3 {
+    stroke-width: 4.5;
+  }
+  .deco-dot {
+    stroke: var(--deco-dot);
+    stroke-width: 6;
+  }
 }
 .hero-eyebrow {
   position: relative;
@@ -324,7 +345,7 @@ a {
 .btn:disabled {
   background: var(--surface-2);
   color: var(--text-3);
-  border-color: transparent;
+  border-color: var(--border);
   cursor: not-allowed;
 }
 .actions {
@@ -347,6 +368,12 @@ a {
   width: 100%;
   margin: 0;
 }
+/* 공유와 상관없는 마무리 버튼(인쇄, 지우기)은 선으로 나누고 작게 */
+.share-end {
+  margin: 20px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--grid);
+}
 
 input[type='text'],
 input:not([type]),
@@ -354,7 +381,7 @@ input:not([type]),
   width: 100%;
   min-height: 46px;
   padding: 8px 12px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--field-border);
   border-radius: 10px;
   background: var(--surface);
   color: var(--text);
@@ -762,6 +789,9 @@ fieldset.question legend {
   align-items: center;
   gap: 12px;
   font-weight: 700;
+  color: var(--text-2);
+  line-height: 1.4;
+  margin-bottom: 4px;
 }
 .rows {
   margin: 0;
@@ -870,7 +900,7 @@ fieldset.question legend {
   gap: 4px 16px;
   list-style: none;
   padding: 0;
-  margin: 8px 0 0;
+  margin: 8px 0 12px;
   font-size: 13px;
   color: var(--text-2);
 }
@@ -1002,7 +1032,7 @@ fieldset.question legend {
   gap: 4px 16px;
   list-style: none;
   padding: 0;
-  margin: 8px 0 0;
+  margin: 8px 0 12px;
   font-size: 13px;
   color: var(--text-2);
 }
@@ -1038,7 +1068,7 @@ select {
   width: 100%;
   min-height: 46px;
   padding: 8px 12px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--field-border);
   border-radius: 10px;
   background: var(--surface);
   color: var(--text);
@@ -1077,7 +1107,7 @@ textarea {
   margin-top: 0;
 }
 .team-notes {
-  margin: 8px 0 0;
+  margin: 12px 0 0;
   padding-left: 1.2em;
   font-size: 14px;
 }
@@ -1113,6 +1143,11 @@ textarea {
   padding-left: 1.2em;
   color: var(--danger);
   font-size: 14px;
+  font-weight: 500;
+}
+.team-problems li + li,
+.team-notes li + li {
+  margin-top: 2px;
 }
 .toggle {
   display: inline-flex;
@@ -1150,6 +1185,8 @@ textarea {
   min-width: 0;
 }
 .member-name {
+  display: inline-block;
+  min-width: 4.5em;
   font-weight: 700;
   margin-right: 10px;
 }
@@ -1202,6 +1239,11 @@ textarea {
   background: var(--strong);
   color: var(--strong-ink);
 }
+.chip.is-zero {
+  background: transparent;
+  color: var(--text-3);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
 .composition-people {
   display: grid;
   grid-template-columns: auto 1fr;
@@ -1226,6 +1268,10 @@ textarea {
 }
 .entry-card .btn {
   margin-top: 4px;
+}
+/* 복사 버튼은 옆 입력 칸과 높이·윗선을 맞춘다 */
+.entry-card .copy-row .btn {
+  margin-top: 0;
 }
 .entry-card + .entry-card {
   margin-top: 16px;
@@ -1253,6 +1299,8 @@ textarea {
   cursor: pointer;
   font-weight: 500;
   padding-block: 12px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 .table-view textarea {
   margin: 8px 0;
@@ -1261,6 +1309,24 @@ input[type='file'] {
   width: 100%;
   font: inherit;
   font-size: 14px;
+}
+/* 파일 고르기 버튼도 알약 모양 보조 버튼으로. 칸 높이는 다른 입력 칸과 같은 46px(버튼 32 + 위아래 6) */
+.field input[type='file'] {
+  padding-block: 6px;
+}
+input[type='file']::file-selector-button {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.2;
+  min-height: 32px;
+  margin-right: 10px;
+  padding: 4px 14px;
+  border: 2px solid var(--text);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
 }
 .core-counts {
   list-style: none;
@@ -1358,6 +1424,8 @@ input[type='file'] {
   cursor: pointer;
   font-weight: 500;
   padding-block: 12px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 /* 375px 화면에서도 가로로 밀리지 않게 숫자 칸은 좁게, 머리줄은 낱말 단위로 줄을 바꾼다 */
 .score-table {
@@ -1566,6 +1634,9 @@ input[type='file'] {
 
 /* ── 인쇄 ─────────────────────────────────────────── */
 
+@page {
+  margin: 14mm;
+}
 @media print {
   .no-print,
   .site-header,
@@ -1575,6 +1646,7 @@ input[type='file'] {
   }
   body {
     background: #fff;
+    font-size: 11pt;
   }
   /* 머리줄 대신 맨 위에 제목 글자 */
   .print-brand {
@@ -1592,6 +1664,8 @@ input[type='file'] {
     padding: 0;
   }
   .card {
+    padding: 14px 16px;
+    margin-top: 12px;
     break-inside: avoid;
   }
   /* 종이에는 보낼 링크·코드가 없으므로 공유 카드 전체를 뺀다 */
@@ -1607,6 +1681,7 @@ input[type='file'] {
       list-style: none;
       cursor: auto;
       font-weight: 700;
+      text-decoration: none;
     }
     .score-view > summary::-webkit-details-marker {
       display: none;
@@ -1618,13 +1693,40 @@ input[type='file'] {
       display: none;
     }
   }
-  /* 지도와 점수 표가 한 카드에 있어 한 쪽을 넘기 쉽다. 카드 안에서는 나뉘게 하되 지도와 표는 각각 통째로 둔다 */
+  /* 지도와 점수 표가 한 카드에 있어 한 쪽을 넘기 쉽다. 카드 안에서는 나뉘게 하되 지도는 통째로 둔다(점수 표는 행 단위로 나뉜다) */
   section[aria-labelledby='sec-map'] {
     break-inside: auto;
   }
-  .chart,
-  .score-view {
+  .chart {
     break-inside: avoid;
+  }
+  /* 긴 카드는 안에서 나뉘게 하고, 줄·행 단위로만 묶는다 */
+  .score-view,
+  section[aria-labelledby='sec-core'],
+  section[aria-labelledby='sec-balance'],
+  section[aria-labelledby='sec-composition'] {
+    break-inside: auto;
+  }
+  .row,
+  .direction,
+  .partner-list li,
+  .member-list li,
+  .composition li,
+  .score-table tr {
+    break-inside: avoid;
+  }
+  h2,
+  .row dt,
+  .score-view > summary {
+    break-after: avoid;
+  }
+  .type-name {
+    font-size: 2rem;
+  }
+  /* 오각형은 화면 폭에서 잰 크기로 실리므로, 종이에서는 높이를 정해 어느 화면에서 인쇄해도 같게 한다 */
+  .pentagon svg {
+    width: 100%;
+    height: 300px;
   }
   /* 배경 그래픽을 끄고 인쇄해도 범례 색 칸과 인원 칩이 남도록 */
   .swatch,

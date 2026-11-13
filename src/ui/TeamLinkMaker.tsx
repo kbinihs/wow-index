@@ -59,7 +59,7 @@ export function TeamLinkMaker() {
                 <label for="team-link">팀 링크</label>
                 <div class="copy-row">
                   <input id="team-link" ref={linkRef} readOnly value={link} onFocus={(e) => (e.target as HTMLInputElement).select()} />
-                  <button type="button" class="btn btn-secondary" onClick={copy}>
+                  <button type="button" class="btn btn-secondary btn-small" onClick={copy}>
                     복사
                   </button>
                 </div>

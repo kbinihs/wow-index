@@ -44,6 +44,8 @@
   --text-3: var(--steel-700);
   --border: var(--sand-300);
   --grid: var(--sand-200);
+  /* 입력 칸 테두리. 흰 면 3.61, 바탕 3.21 */
+  --field-border: var(--sand-600);
   /* 작은 그래픽(동그라미 테두리, 진행 막대, 선택 테두리, 오각형 등). 흰 면 4.7, 바탕 4.2 */
   --accent-ui: var(--steel);
   /* 주요 버튼: Navy 면 + 흰 글자 */
@@ -92,6 +94,8 @@
     --text-3: var(--sky);
     --border: var(--navy-400);
     --grid: var(--navy-450);
+    /* 입력 칸 테두리. Navy 카드 위 3.53 */
+    --field-border: var(--sand-600);
     --accent-ui: var(--sky);
     --accent: var(--sky);
     --accent-ink: var(--navy);
@@ -125,6 +129,8 @@
     --text-3: var(--sky);
     --border: var(--navy-400);
     --grid: var(--navy-450);
+    /* 입력 칸 테두리. Navy 카드 위 3.53 */
+    --field-border: var(--sand-600);
     --accent-ui: var(--sky);
     --accent: var(--sky);
     --accent-ink: var(--navy);

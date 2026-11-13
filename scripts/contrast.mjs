@@ -51,6 +51,10 @@ const pairs = [
   ['다크 강조 그래픽 Sky(선택 면)', C.sky, C.navy500, 3],
   ['다크 오류 글자', C.red200, C.navy, 4.5],
   ['다크 초점 테두리 Sand(바탕)', C.sand, C.navy900, 3],
+  ['입력 칸 테두리(흰 카드)', C.sand600, C.white, 3],
+  ['다크 입력 칸 테두리(카드)', C.sand600, C.navy, 3],
+  ['오류 띠(알림 면)', C.red800, C.sand100, 3],
+  ['다크 오류 띠(알림 면)', C.red200, C.navy600, 3],
 ];
 let fail = 0;
 for (const [name, fg, bg, need] of pairs) {

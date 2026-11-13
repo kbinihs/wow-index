@@ -153,6 +153,7 @@ function ResultView({
       <Section title={`주 유형: ${NAMES[c]}`} id="sec-core">
         <p class="core-badge">
           <Crest archetype={c} size={40} />
+          <span>{PROFILES[c].oneLine}</span>
         </p>
         <ProfileRows archetype={c} />
       </Section>
@@ -252,7 +253,7 @@ function ScoreView({ r }: { r: Scored }) {
   );
 }
 
-/** 한 줄 설명(머리에 이미 나옴)과 늘 함께 있어야 할 사람(채워 줄 짝에 나옴)은 뺀다 */
+/** 한 줄 설명(머리에 이미 나옴)과 늘 함께 있어야 할 사람(채워 줄 짝에 나옴)은 표에서는 뺀다 */
 const SHOWN: (keyof Profile)[] = ['values', 'strengths', 'fits', 'cautions', 'ngoNote', 'selfCheck', 'indicators'];
 
 function ProfileRows({ archetype }: { archetype: Archetype }) {
@@ -367,7 +368,7 @@ function Share({ summary, initialNick, initialTeam }: { summary: Summary; initia
         <label for="share-code">팀 코드</label>
         <div class="copy-row">
           <input id="share-code" ref={codeRef} readOnly value={teamCode} onFocus={(e) => (e.target as HTMLInputElement).select()} />
-          <button type="button" class="btn btn-secondary" onClick={() => copy(teamCode, codeRef.current, '팀 코드')}>
+          <button type="button" class="btn btn-secondary btn-small" onClick={() => copy(teamCode, codeRef.current, '팀 코드')}>
             복사
           </button>
         </div>
@@ -379,7 +380,7 @@ function Share({ summary, initialNick, initialTeam }: { summary: Summary; initia
           <label for="share-link">결과 링크</label>
           <div class="copy-row">
             <input id="share-link" ref={linkRef} readOnly value={link} onFocus={(e) => (e.target as HTMLInputElement).select()} />
-            <button type="button" class="btn btn-secondary" onClick={() => copy(link, linkRef.current, '결과 링크')}>
+            <button type="button" class="btn btn-secondary btn-small" onClick={() => copy(link, linkRef.current, '결과 링크')}>
               복사
             </button>
           </div>
@@ -399,12 +400,12 @@ function Share({ summary, initialNick, initialTeam }: { summary: Summary; initia
         </p>
       )}
 
-      <div class="actions no-print">
-        <button type="button" class="btn btn-secondary" onClick={() => window.print()}>
+      <div class="actions share-end no-print">
+        <button type="button" class="btn btn-secondary btn-small" onClick={() => window.print()}>
           인쇄
         </button>
         {!confirmClear ? (
-          <button type="button" class="btn btn-danger-quiet" onClick={() => setConfirmClear(true)}>
+          <button type="button" class="btn btn-danger-quiet btn-small" onClick={() => setConfirmClear(true)}>
             내 응답 지우기
           </button>
         ) : (

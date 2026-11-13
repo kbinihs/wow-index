@@ -314,8 +314,8 @@ export function Team({ home = '처음 화면으로' }: { home?: string }) {
                     <p class="composition-name">
                       {NAMES[a]}
                       <span class="count-chips">
-                        <span class="chip chip-core">주 {by[a].core.length}</span>
-                        <span class="chip chip-second">보조 {by[a].second.length}</span>
+                        <span class={`chip chip-core${by[a].core.length ? '' : ' is-zero'}`}>주 {by[a].core.length}</span>
+                        <span class={`chip chip-second${by[a].second.length ? '' : ' is-zero'}`}>보조 {by[a].second.length}</span>
                       </span>
                     </p>
                     <p class="hint composition-line">{PROFILES[a].oneLine}</p>

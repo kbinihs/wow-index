@@ -39,16 +39,18 @@ export function AdminHome() {
         <p>
           참여자에게는 아래 참여 링크를 보내 주세요. 이 링크로 들어온 브라우저에서만 결과 화면에 '파일럿 응답 파일 내보내기'가 나타납니다.
         </p>
-        <label for="pilot-link">파일럿 참여 링크</label>
-        <div class="copy-row">
-          <input id="pilot-link" ref={linkRef} readOnly value={pilotLink} onFocus={(e) => (e.target as HTMLInputElement).select()} />
-          <button type="button" class="btn btn-secondary" onClick={copy}>
-            복사
-          </button>
+        <div class="field">
+          <label for="pilot-link">파일럿 참여 링크</label>
+          <div class="copy-row">
+            <input id="pilot-link" ref={linkRef} readOnly value={pilotLink} onFocus={(e) => (e.target as HTMLInputElement).select()} />
+            <button type="button" class="btn btn-secondary btn-small" onClick={copy}>
+              복사
+            </button>
+          </div>
+          <p class="hint" role="status">
+            {status}
+          </p>
         </div>
-        <p class="hint" role="status">
-          {status}
-        </p>
         <a class="btn btn-secondary" href="#/analysis">
           응답 분석 열기
         </a>
